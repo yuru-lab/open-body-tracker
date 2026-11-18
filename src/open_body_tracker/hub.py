@@ -3,7 +3,7 @@ import hashlib
 from pathlib import Path
 import urllib.request
 
-HF_REPO = "open-body-tracker/open-body-tracker"  # TODO: set to the published Hugging Face repository
+HF_REPO = "Yurup/open-body-tracker"
 HF = f"https://huggingface.co/{HF_REPO}/resolve/main/"
 YOLOX = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/"
 

@@ -2,7 +2,7 @@
 import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.webgpu.min.mjs';
 
 // Models are read from ./models/ when present (local development), otherwise from Hugging Face.
-const HF = 'https://huggingface.co/open-body-tracker/open-body-tracker/resolve/main/'; // TODO: published repository
+const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
 // float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB).
 const POSE_MODELS = { f16: 'obt-h3c-fp16.onnx', f32: 'obt-h3c.onnx' };
 const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416, DET_THRESHOLD = 0.3;
