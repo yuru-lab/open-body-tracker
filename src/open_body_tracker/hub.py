@@ -8,8 +8,8 @@ HF = f"https://huggingface.co/{HF_REPO}/resolve/main/"
 YOLOX = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/"
 
 FILES = {
-    "obt-h3c.onnx": (HF + "obt-h3c.onnx", None),
-    "obt-h3c-fp16.onnx": (HF + "obt-h3c-fp16.onnx", None),
+    "obt-h3c.onnx": (HF + "obt-h3c.onnx", "f71d29b5bea52fc4a853f2aff626dd81a4cffae8374b84ea349cf79703e8a57d"),
+    "obt-h3c-fp16.onnx": (HF + "obt-h3c-fp16.onnx", "21ab7573354a21e2b65986bd5c93be2ee2b663bcd29eca2ad2c7e1a76bda265b"),
     "yolox_nano.onnx": (YOLOX + "yolox_nano.onnx", "c789161ed43c8269fcd4e67c67eeeb4e80c622da2eb296a20bc6007bd18a0b7d"),
     "yolox_tiny.onnx": (YOLOX + "yolox_tiny.onnx", "427cc366d34e27ff7a03e2899b5e3671425c262ea2291f88bb942bc1cc70b0f7"),
 }
