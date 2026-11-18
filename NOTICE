@@ -1,0 +1,26 @@
+open-body-tracker
+Copyright 2026 open-body-tracker contributors
+
+Source code in this repository is licensed under the Apache License 2.0 (LICENSE).
+The model weights (obt-h3c.*) and the teacher labels are distributed under the SAM License
+(licenses/SAM-LICENSE.txt); see MODEL_CARD.md.
+
+This product includes or adapts the following third-party work:
+
+* MMPose (OpenMMLab), Apache License 2.0, https://github.com/open-mmlab/mmpose
+  The pose head (RTMWHead, RTMCCBlock / gated attention unit, ScaleNorm) and the SimCC
+  coordinate classification are re-implemented from MMPose. Copyright (c) OpenMMLab.
+
+* DINOv2 (Meta Platforms, Inc.), Apache License 2.0, https://github.com/facebookresearch/dinov2
+  The backbone is a ViT-B/14 initialised from the official DINOv2 weights.
+
+* YOLOX (Megvii Inc.), Apache License 2.0, https://github.com/Megvii-BaseDetection/YOLOX
+  The demos run the official YOLOX-nano / YOLOX-tiny ONNX person detectors (licenses/YOLOX-LICENSE.txt).
+
+* SAM 3D Body (Meta Platforms, Inc.), SAM License, https://github.com/facebookresearch/sam-3d-body
+  The model was trained in part on outputs of SAM 3D Body. "SAM Materials" were used to
+  create these weights; see licenses/SAM-LICENSE.txt.
+
+* ONNX Runtime (Microsoft), MIT License — loaded by the web demo from a CDN.
+
+Training images are NOT included. See DATA.md for the datasets and their licences.
