@@ -1,0 +1,23 @@
+[tools]
+python = "3.12"
+uv = "latest"
+node = "lts"
+
+[env]
+_.python.venv = { path = ".venv", create = false }
+
+[tasks.setup]
+description = "Install Python dependencies with uv"
+run = "uv sync"
+
+[tasks.test]
+description = "Run the tests"
+run = "uv run pytest -q"
+
+[tasks.demo]
+description = "Webcam demo (Python, ONNX Runtime)"
+run = "uv run obt-demo"
+
+[tasks.web]
+description = "Serve the WebGPU demo at http://localhost:8000"
+run = "uv run python -m http.server 8000 --directory web"
