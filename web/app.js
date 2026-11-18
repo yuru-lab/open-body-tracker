@@ -1,7 +1,7 @@
 // open-body-tracker browser demo: YOLOX person detector + 3D pose model, both on ONNX Runtime Web (WebGPU, WASM fallback).
 import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.webgpu.min.mjs';
 
-// Models are read from ./models/ when present (local development), otherwise from Hugging Face.
+// Models come from Hugging Face; when served from localhost, ./models/ is tried first.
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
 // float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB).
 const POSE_MODELS = { f16: 'obt-h3c-fp16.onnx', f32: 'obt-h3c.onnx' };
@@ -21,7 +21,8 @@ let backend = null, pose = null, detector = null, detectorName = null, running =
 
 async function modelBytes(name) {
   const cache = 'caches' in self ? await caches.open('open-body-tracker-v1') : null;
-  for (const url of [`./models/${name}`, HF + name]) {
+  const local = ['localhost', '127.0.0.1'].includes(location.hostname);
+  for (const url of local ? [`./models/${name}`, HF + name] : [HF + name]) {
     const hit = cache && await cache.match(url);
     if (hit) return new Uint8Array(await hit.arrayBuffer());
     const response = await fetch(url).catch(() => null);
