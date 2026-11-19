@@ -6,6 +6,13 @@
 
 **[ブラウザデモを試す](https://yuru-lab.github.io/open-body-tracker/)**：処理はすべて手元のPCで行い、映像は外部に送りません。
 
+![ASPset-510の動画でのobt-h3c：映像に2D骨格、横に3Dの予測と正解](docs/sample-aspset.gif)
+
+<sub>[ASPset-510](https://github.com/anibali/aspset-510)（CC0）の、学習に一度も使っていない人の映像です。
+グレーはASPsetの多視点カメラから作った正解の3D、色はobt-h3c（カメラ1台、1フレームずつ独立、平滑化なし）。
+決まった規則（正面カメラ、誤差が評価平均の±8mm以内、動きがいちばん多い）で選んだ1本で、
+誤差はこのクリップで64mm（PA-MPJPE）、評価全体の平均は67.9mmです。しゃがむ・背中向きなどの難しい姿勢では約86mmになります。</sub>
+
 - 重み：[GitHub Releases](https://github.com/yuru-lab/open-body-tracker/releases) · [Hugging Face](https://huggingface.co/Yurup/open-body-tracker)
 - 精度・学習データ・制限：[MODEL_CARD.md](MODEL_CARD.md) · [DATA.md](DATA.md)（英語）
 

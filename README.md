@@ -7,6 +7,13 @@ for one person, in real time on a consumer GPU or in the browser with WebGPU.
 
 **[Try the browser demo](https://yuru-lab.github.io/open-body-tracker/)**. It runs locally and your video never leaves the device.
 
+![obt-h3c on an ASPset-510 clip: 2D skeleton on the video, 3D prediction next to the reference](docs/sample-aspset.gif)
+
+<sub>A person from [ASPset-510](https://github.com/anibali/aspset-510) (CC0) who was never used in training.
+Grey: ASPset multi-view reference 3D. Colour: obt-h3c, one camera, each frame on its own, no smoothing.
+The clip was chosen by a fixed rule (front camera, error within ±8 mm of the held-out average, most varied pose):
+64 mm PA-MPJPE here, 67.9 mm on average. Harder poses such as crouching or a back view reach about 86 mm.</sub>
+
 - Weights: [GitHub Releases](https://github.com/yuru-lab/open-body-tracker/releases) · [Hugging Face](https://huggingface.co/Yurup/open-body-tracker)
 - Accuracy, training data and limitations: [MODEL_CARD.md](MODEL_CARD.md) · [DATA.md](DATA.md)
 
