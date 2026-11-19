@@ -18,7 +18,7 @@ const video = $('video');
 // Live settings (read every frame), remembered in this browser.
 const SETTINGS = ['detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing'];
 const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
-let backend = null, pose = null, detector = null, detectorName = null, running = false, generation = 0;
+let backend = null, pose = null, detector = null, detectorName = null, running = false;
 
 // ------------------------------------------------------------ model loading
 
@@ -204,10 +204,15 @@ $('skeleton').addEventListener('pointerup', () => { drag = null; });
 
 // ------------------------------------------------------------ main loop
 
-async function loop(id) {
+// ONNX Runtime Web must not run two inferences at once, so a running loop is always halted (and awaited) before the
+// camera, detector or models change.
+let current = null;  // { halt(), done }
+
+async function loop(halted) {
   let tracked = null, detectedAt = -1e9, frames = 0, detections = 0, last = performance.now(), fps = 0;
-  while (running && id === generation) {
-    await new Promise((resolve) => video.requestVideoFrameCallback(resolve));
+  for (;;) {
+    const frame = await Promise.race([new Promise((resolve) => video.requestVideoFrameCallback(() => resolve(true))), halted]);
+    if (!frame) return;
     const now = performance.now(), width = video.videoWidth, height = video.videoHeight;
     let box = tracked, source = 'tracker';
     if (!box || now - detectedAt >= threshold('schedule')) {
@@ -223,12 +228,29 @@ async function loop(id) {
     window.openBodyTracker = { result, box, source, backend }; // for debugging and tests
     frames++; fps = 0.9 * fps + 0.1 * (1000 / Math.max(1, now - last)); last = now;
     if (frames % 15 === 0) $('stats').textContent = `${fps.toFixed(0)} FPS · ${backend} · detector ran on ${(100 * detections / frames).toFixed(0)}% of frames`;
-    if (id === generation) status(result ? 'Running' : 'No person found');
+    status(result ? 'Running' : 'No person found');
   }
 }
 
+async function halt() {
+  if (!current) return;
+  const { halt: signal, done } = current;
+  current = null; running = false;
+  signal(); await done;
+}
+
+async function stop(message = 'Stopped.') {
+  await halt();
+  $('start').disabled = false;
+  if (video.srcObject) { video.srcObject.getTracks().forEach((t) => t.stop()); video.srcObject = null; }
+  $('start').textContent = 'Start';
+  $('stats').textContent = '';
+  status(message);
+}
+
 async function start() {
-  running = false;
+  $('start').disabled = true;
+  await halt();
   if (!backend) {
     const adapter = navigator.gpu && await navigator.gpu.requestAdapter().catch(() => null);
     backend = adapter ? 'webgpu' : 'wasm';
@@ -236,7 +258,7 @@ async function start() {
   }
   if (detectorName !== $('detector').value) { detector = await session($('detector').value); detectorName = $('detector').value; }
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { deviceId: $('camera').value ? { exact: $('camera').value } : undefined, width: 640, height: 480 }, audio: false });
+    video: { deviceId: cameraChoice ? { exact: cameraChoice } : undefined, width: 640, height: 480 }, audio: false });
   if (video.srcObject) video.srcObject.getTracks().forEach((t) => t.stop());
   video.srcObject = stream;
   await video.play();
@@ -244,28 +266,42 @@ async function start() {
   await listCameras(stream.getVideoTracks()[0].getSettings().deviceId);
   filters.xy.reset(); filters.xyz.reset();
   running = true;
-  const id = ++generation;
+  $('start').disabled = false; $('start').textContent = 'Stop';
   if (backend === 'wasm') status('WebGPU is not available; running on the CPU (slow).');
-  loop(id).catch((error) => { running = false; status(`Error: ${error.message}`); });
+  let signal;
+  const halted = new Promise((resolve) => { signal = () => resolve(false); });
+  const done = loop(halted).catch((error) => { current = null; running = false; stop(`Error: ${error.message}`); });
+  current = { halt: signal, done };
 }
 
 // ------------------------------------------------------------ controls
 
 // Cameras can be chosen before Start. Browsers hide camera names (and sometimes ids) until camera access is allowed.
-async function listCameras(selected = $('camera').value) {
+const ASK = '?ask';
+let cameraChoice = '';  // last real choice ('' = default camera)
+async function listCameras(selected = cameraChoice) {
   if (!navigator.mediaDevices?.enumerateDevices) return;
   const devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput' && d.deviceId);
-  const options = devices.map((d, i) => new Option(d.label || `Camera ${i + 1}`, d.deviceId, false, d.deviceId === selected));
-  $('camera').replaceChildren(new Option('Default camera', '', false, !selected), ...options);
-  if (selected && !devices.some((d) => d.deviceId === selected)) $('camera').value = '';
-  $('allow').hidden = devices.length > 0 && devices.every((d) => d.label);
+  const named = devices.length > 0 && devices.every((d) => d.label);
+  const options = devices.map((d, i) => new Option(d.label || `Camera ${i + 1}`, d.deviceId));
+  if (!named) options.push(new Option('List all cameras (asks for camera access)…', ASK));
+  $('camera').replaceChildren(new Option('Default camera', ''), ...options);
+  cameraChoice = devices.some((d) => d.deviceId === selected) ? selected : '';
+  $('camera').value = cameraChoice;
 }
 
-$('allow').addEventListener('click', async () => {
-  try {
-    (await navigator.mediaDevices.getUserMedia({ video: true, audio: false })).getTracks().forEach((t) => t.stop());
+$('camera').addEventListener('change', async () => {
+  if ($('camera').value === ASK) {
+    $('camera').value = cameraChoice;
+    try {
+      (await navigator.mediaDevices.getUserMedia({ video: true, audio: false })).getTracks().forEach((t) => t.stop());
+      status('Choose a camera, then press Start.');
+    } catch (error) { status(`Camera access was not allowed: ${error.message}`); }
     await listCameras();
-  } catch (error) { status(`Camera access was not allowed: ${error.message}`); }
+    return;
+  }
+  cameraChoice = $('camera').value;
+  if (running) start().catch((error) => stop(`Error: ${error.message}`));
 });
 navigator.mediaDevices?.addEventListener?.('devicechange', () => listCameras().catch(() => {}));
 
@@ -288,5 +324,8 @@ for (const id of SETTINGS) {
 setSmoothing(setting('smoothing'));
 listCameras().catch(() => {});
 
-$('controls').addEventListener('submit', (e) => { e.preventDefault(); start().catch((error) => status(`Error: ${error.message}`)); });
-for (const id of ['camera', 'detector']) $(id).addEventListener('change', () => { if (running) start().catch((error) => status(`Error: ${error.message}`)); });
+$('controls').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (running) stop(); else start().catch((error) => stop(`Error: ${error.message}`));
+});
+$('detector').addEventListener('change', () => { if (running) start().catch((error) => stop(`Error: ${error.message}`)); });
