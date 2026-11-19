@@ -9,6 +9,7 @@ select, button { font: inherit; padding: 4px 8px; }
 button { cursor: pointer; }
 .views { display: flex; flex-wrap: wrap; gap: 12px; }
 canvas { background: #000; border: 1px solid var(--line); border-radius: 6px; max-width: 100%; height: auto; }
+#image.mirrored { transform: scaleX(-1); }
 #skeleton { background: #18181b; cursor: grab; touch-action: none; }
 footer { margin-top: 24px; font-size: 13px; }
 a { color: inherit; }

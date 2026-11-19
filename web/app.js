@@ -18,7 +18,7 @@ const $ = (id) => document.getElementById(id);
 const status = (text) => { $('status').textContent = text; };
 const video = $('video');
 // Live settings (read every frame), remembered in this browser.
-const SETTINGS = ['detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing'];
+const SETTINGS = ['detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'view'];
 const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
 let backend = null, pose = null, detector = null, detectorName = null, running = false;
 
@@ -159,6 +159,7 @@ function setSmoothing(level) {
 // ------------------------------------------------------------ drawing
 
 let yaw = 0.5, pitch = 0.15;
+const mirrored = () => setting('view') === 'mirror';
 function draw(result, box, source) {
   const ctx = $('image').getContext('2d');
   ctx.drawImage(video, 0, 0, $('image').width, $('image').height);
@@ -183,11 +184,11 @@ function draw(result, box, source) {
     if (result.score[k] < threshold('jointThreshold')) continue;
     ctx.fillStyle = colour(k, k); ctx.beginPath(); ctx.arc(result.xy[k][0] * scale, result.xy[k][1] * scale, 3.5, 0, 2 * Math.PI); ctx.fill();
   }
-  // 3D: camera frame (x right, y down, z away), rotated by yaw/pitch, 2.4 m across the view.
-  const [cy, sy, cp, sp] = [Math.cos(yaw), Math.sin(yaw), Math.cos(pitch), Math.sin(pitch)];
+  // 3D: camera frame (x right, y down, z away), rotated by yaw/pitch, 2.4 m across the view; mirrored like the image.
+  const [cy, sy, cp, sp] = [Math.cos(yaw), Math.sin(yaw), Math.cos(pitch), Math.sin(pitch)], m = mirrored() ? -1 : 1;
   const project = ([x, y, z]) => {
     const x1 = cy * x - sy * z, z1 = sy * x + cy * z;
-    return [size / 2 + x1 * size / 2.4, size / 2 + (cp * y - sp * z1) * size / 2.4];
+    return [size / 2 + m * x1 * size / 2.4, size / 2 + (cp * y - sp * z1) * size / 2.4];
   };
   sk.strokeStyle = '#3a3a40'; sk.lineWidth = 1; sk.beginPath();
   for (let i = -1; i <= 1; i += 0.25) {  // floor grid 1 m below the hips
@@ -206,7 +207,7 @@ let drag = null;
 $('skeleton').addEventListener('pointerdown', (e) => { drag = [e.clientX, e.clientY]; e.target.setPointerCapture(e.pointerId); });
 $('skeleton').addEventListener('pointermove', (e) => {
   if (!drag) return;
-  yaw += (e.clientX - drag[0]) * 0.01; pitch = Math.max(-1.4, Math.min(1.4, pitch + (e.clientY - drag[1]) * 0.01));
+  yaw += (mirrored() ? -1 : 1) * (e.clientX - drag[0]) * 0.01; pitch = Math.max(-1.4, Math.min(1.4, pitch + (e.clientY - drag[1]) * 0.01));
   drag = [e.clientX, e.clientY];
 });
 $('skeleton').addEventListener('pointerup', () => { drag = null; });
@@ -327,10 +328,12 @@ for (const id of SETTINGS) {
   $(id).addEventListener('input', () => {
     showValue(id);
     if (id === 'smoothing') setSmoothing(setting('smoothing'));
+    if (id === 'view') $('image').classList.toggle('mirrored', mirrored());
     try { localStorage.setItem(`obt.${id}`, $(id).value); } catch {}
   });
 }
 setSmoothing(setting('smoothing'));
+$('image').classList.toggle('mirrored', mirrored());
 listCameras().catch(() => {});
 
 $('controls').addEventListener('submit', (e) => {
