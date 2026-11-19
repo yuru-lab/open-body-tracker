@@ -7,9 +7,11 @@ const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
 const POSE_MODELS = { f16: 'obt-h3c-fp16.onnx', f32: 'obt-h3c.onnx' };
 const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416;
 const HIPS = [11, 12];
-const EDGES = [[5, 6], [5, 7], [7, 9], [6, 8], [8, 10], [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
+// Joint 23 is drawn only: the neck, midway between the shoulders.
+const NECK = 23;
+const EDGES = [[0, 1], [0, 2], [1, 3], [2, 4], [0, NECK], [5, 6], [5, 7], [7, 9], [6, 8], [8, 10], [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
   [15, 17], [15, 19], [17, 18], [16, 20], [16, 22], [20, 21]];
-const LEFT = new Set([5, 7, 9, 11, 13, 15, 17, 18, 19]), RIGHT = new Set([6, 8, 10, 12, 14, 16, 20, 21, 22]);
+const LEFT = new Set([1, 3, 5, 7, 9, 11, 13, 15, 17, 18, 19]), RIGHT = new Set([2, 4, 6, 8, 10, 12, 14, 16, 20, 21, 22]);
 const colour = (a, b) => (LEFT.has(a) && LEFT.has(b) ? '#2b8cea' : RIGHT.has(a) && RIGHT.has(b) ? '#f58c28' : '#c8c8c8');
 
 const $ = (id) => document.getElementById(id);
@@ -163,6 +165,9 @@ function draw(result, box, source) {
   const sk = $('skeleton').getContext('2d'), size = $('skeleton').width;
   sk.fillStyle = '#18181b'; sk.fillRect(0, 0, size, size);
   if (!result) return;
+  const mid = (p) => p[5].map((v, i) => (v + p[6][i]) / 2);
+  result = { ...result, xy: [...result.xy, mid(result.xy)], xyz: [...result.xyz, mid(result.xyz)],
+    score: [...result.score, Math.min(result.score[5], result.score[6])] };
   const scale = $('image').width / video.videoWidth;
   ctx.lineWidth = 1; ctx.setLineDash(source === 'tracker' ? [4, 4] : []);
   ctx.strokeStyle = source === 'tracker' ? '#50c850' : '#ffd400';
@@ -173,6 +178,10 @@ function draw(result, box, source) {
     if (!confident(a, b)) continue;
     ctx.strokeStyle = colour(a, b); ctx.beginPath();
     ctx.moveTo(result.xy[a][0] * scale, result.xy[a][1] * scale); ctx.lineTo(result.xy[b][0] * scale, result.xy[b][1] * scale); ctx.stroke();
+  }
+  for (let k = 0; k < 5; k++) {  // face points: nose, eyes, ears
+    if (result.score[k] < threshold('jointThreshold')) continue;
+    ctx.fillStyle = colour(k, k); ctx.beginPath(); ctx.arc(result.xy[k][0] * scale, result.xy[k][1] * scale, 3.5, 0, 2 * Math.PI); ctx.fill();
   }
   // 3D: camera frame (x right, y down, z away), rotated by yaw/pitch, 2.4 m across the view.
   const [cy, sy, cp, sp] = [Math.cos(yaw), Math.sin(yaw), Math.cos(pitch), Math.sin(pitch)];
