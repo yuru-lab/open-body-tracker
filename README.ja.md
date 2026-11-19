@@ -79,7 +79,7 @@ docs/REPRODUCE.md        学習の手順と再現
 
 ## 再現性
 
-学習の手順はすでに公開しています。学習コード、画像のID一覧、SAM 3D Bodyの教師ラベルは、まだ公開していません。書き直した学習コードで最初から学習し直し、同じ精度になることを確かめてから、まとめて公開します。教師ラベルがあれば、SAM 3D Bodyを自分で動かさなくても学習できます。状況は [docs/REPRODUCE.md](docs/REPRODUCE.md) にまとめます。
+学習コードは [`training/`](training/) にあり、SAM 3D Bodyの教師ラベルを含むラベル一式はHugging Faceの [`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels) にあります（SAM 3D Bodyを自分で動かす必要はありません）。このコードとラベルだけで最初から学習し直し、公開モデルと同じ精度になることを確かめました（COCO AP 71.6 対 71.7、ASPset PA-MPJPE 67.6mm 対 67.9mm）。手順と詳細は [docs/REPRODUCE.md](docs/REPRODUCE.md)（英語）にあります。
 
 ## ライセンス
 

@@ -81,9 +81,11 @@ docs/REPRODUCE.md        training recipe and reproduction
 
 ## Reproducibility
 
-The training recipe is documented now. The training code, the image id lists and the SAM 3D Body teacher labels
-(so that you do not need to run SAM 3D Body) will be released together after a full re-training run confirms that
-the cleaned-up code reproduces the released accuracy. Status: [docs/REPRODUCE.md](docs/REPRODUCE.md).
+The training code is in [`training/`](training/) and the labels, including the SAM 3D Body teacher outputs (so you
+do not need to run SAM 3D Body), are on Hugging Face:
+[`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels). A full
+re-training run with exactly this code and these labels reproduced the released accuracy (COCO AP 71.6 vs 71.7,
+ASPset PA-MPJPE 67.6 vs 67.9 mm). Steps and details: [docs/REPRODUCE.md](docs/REPRODUCE.md).
 
 ## License
 

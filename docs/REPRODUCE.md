@@ -4,7 +4,18 @@ Everything needed to train `obt-h3c` from public data is in this repository and 
 [`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels).
 SAM 3D Body does **not** need to be run: its outputs are part of the label release.
 
-> **Status:** a full re-training run with this code is in progress; its result will be added below.
+> **Verified (2026-11-20):** a full re-training run with exactly this code and the published labels, on one
+> RTX 3060 Ti, reproduces the released accuracy within run-to-run noise:
+>
+> | | released `obt-h3c` | re-trained |
+> |---|---:|---:|
+> | COCO val2017 AP, clean / full | 71.7 / 72.7 | 71.6 / 73.0 |
+> | ASPset-510 held-out PA-MPJPE | 67.9 mm | 67.6 mm |
+> | ASPset-510 held-out MPJPE | 92.7 mm | 92.6 mm |
+>
+> Paired difference on the same 3,877 ASPset frames (re-trained − released): PA-MPJPE −0.24 mm
+> [−0.78, +0.33], MPJPE −0.09 mm [−0.74, +0.63] (95% bootstrap intervals over the 90 recordings).
+> Wall time: stage 1 about 11 h, stage 2 about 3.7 h.
 
 ## 1. Labels and photos
 
@@ -27,7 +38,7 @@ On the release machine all 265,463 crops were bit-identical (OpenCV 5.0.0, pinne
 ## 2. Training
 
 ```sh
-uv run python training/train.py --stage 2d --out runs/stage1                            # ~10 h on an RTX 3060 Ti
+uv run python training/train.py --stage 2d --out runs/stage1                            # ~11 h on an RTX 3060 Ti
 uv run python training/train.py --stage 3d --init runs/stage1/final.pt --out runs/stage2 # ~3.5 h
 uv run python scripts/convert_checkpoint.py runs/stage2/final.pt models/my-model.safetensors
 uv run python scripts/export_onnx.py models/my-model.safetensors models/my-model.onnx
