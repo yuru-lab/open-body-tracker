@@ -130,6 +130,7 @@ class ConvBNReLU(nn.Module):
         super().__init__()
         self.conv = nn.Conv2d(cin, cout, kernel, 1, kernel // 2, bias=False)
         self.bn = nn.BatchNorm2d(cout)
+        nn.init.kaiming_normal_(self.conv.weight, mode="fan_out", nonlinearity="relu")  # as MMCV ConvModule
 
     def forward(self, x):
         return F.relu(self.bn(self.conv(x)))
@@ -161,13 +162,14 @@ class GAU(nn.Module):
     def __init__(self, dim=256, s=128, expansion=2):
         super().__init__()
         self.e, self.s = dim * expansion, s
-        self.ln = ScaleNorm(dim)
+        # Same construction order as MMPose RTMCCBlock, so a seeded initialisation matches the release run.
+        self.o = nn.Linear(self.e, dim, bias=False)
         self.uv = nn.Linear(dim, 2 * self.e + s, bias=False)
         self.gamma = nn.Parameter(torch.rand(2, s))
         self.beta = nn.Parameter(torch.rand(2, s))
-        self.o = nn.Linear(self.e, dim, bias=False)
-        self.res_scale = Scale(dim)
+        self.ln = ScaleNorm(dim)
         nn.init.xavier_uniform_(self.uv.weight)
+        self.res_scale = Scale(dim)
 
     def forward(self, x):
         u, v, base = torch.split(F.silu(self.uv(self.ln(x))), [self.e, self.e, self.s], dim=2)
@@ -178,22 +180,40 @@ class GAU(nn.Module):
 
 
 class Head(nn.Module):
-    def __init__(self, keypoints=NUM_KEYPOINTS, hidden=256, kernel=7):
+    """keypoints=17, metric=False is the 2D model of training stage 1; the released model is 23 points with metric 3D."""
+
+    def __init__(self, keypoints=NUM_KEYPOINTS, metric=True, hidden=256, kernel=7):
         super().__init__()
         coarse = (GRID[0] // 2) * (GRID[1] // 2)  # 9x7
         c = HEAD_CHANNELS
-        self.final_layer = ConvBNReLU(c, keypoints, kernel)
+        # Same construction order as MMPose RTMWHead (matters only for the seeded initialisation).
         self.ps = nn.PixelShuffle(2)
         self.conv_dec = ConvBNReLU(c // 4, c // 4, kernel)
+        self.final_layer = ConvBNReLU(c, keypoints, kernel)
         self.final_layer2 = ConvBNReLU(c // 2 + c // 4, keypoints, kernel)
         self.mlp = nn.Sequential(ScaleNorm(coarse), nn.Linear(coarse, hidden // 2, bias=False))
         self.mlp2 = nn.Sequential(ScaleNorm(coarse * 4), nn.Linear(coarse * 4, hidden // 2, bias=False))
         self.gau = GAU(hidden)
         self.cls_x = nn.Linear(hidden, int(CROP_WIDTH * SIMCC_SPLIT), bias=False)
         self.cls_y = nn.Linear(hidden, int(CROP_HEIGHT * SIMCC_SPLIT), bias=False)
-        self.cls_X = nn.Linear(hidden, METRIC_BINS, bias=False)
-        self.cls_Y = nn.Linear(hidden, METRIC_BINS, bias=False)
-        self.cls_Z = nn.Linear(hidden, METRIC_BINS, bias=False)
+        self.metric = metric
+        if metric:
+            self.cls_X = nn.Linear(hidden, METRIC_BINS, bias=False)
+            self.cls_Y = nn.Linear(hidden, METRIC_BINS, bias=False)
+            self.cls_Z = nn.Linear(hidden, METRIC_BINS, bias=False)
+
+    def init_weights(self):
+        """MMPose RTMWHead initialisation, in MMEngine's order (the same seed gives the same weights as the release run)."""
+        for kind, init in ((nn.Conv2d, lambda m: nn.init.normal_(m.weight, 0, 0.001)),
+                           (nn.BatchNorm2d, lambda m: (nn.init.ones_(m.weight), nn.init.zeros_(m.bias))),
+                           (nn.Linear, lambda m: nn.init.normal_(m.weight, 0, 0.01))):
+            for module in self.modules():
+                if isinstance(module, kind):
+                    init(module)
+        # MMEngine then calls each ConvModule's own init_weights, which re-initialises its conv (Kaiming, fan-out).
+        for module in self.modules():
+            if isinstance(module, ConvBNReLU):
+                nn.init.kaiming_normal_(module.conv.weight, mode="fan_out", nonlinearity="relu")
 
     def forward(self, feats):
         fine, coarse = feats
@@ -201,18 +221,19 @@ class Head(nn.Module):
         fine = torch.cat([self.conv_dec(self.ps(coarse)), fine], dim=1)
         tokens_fine = self.mlp2(torch.flatten(self.final_layer2(fine), 2))
         tokens = self.gau(torch.cat([tokens_coarse, tokens_fine], dim=2))
-        return tuple(layer(tokens) for layer in (self.cls_x, self.cls_y, self.cls_X, self.cls_Y, self.cls_Z))
+        layers = (self.cls_x, self.cls_y, self.cls_X, self.cls_Y, self.cls_Z) if self.metric else (self.cls_x, self.cls_y)
+        return tuple(layer(tokens) for layer in layers)
 
 
 class BodyModel(nn.Module):
-    def __init__(self, checkpointing=False):
+    def __init__(self, keypoints=NUM_KEYPOINTS, metric=True, checkpointing=False):
         super().__init__()
         self.backbone = ViT(checkpointing=checkpointing)
         self.neck = Neck()
-        self.head = Head()
+        self.head = Head(keypoints, metric)
 
     def forward(self, image):
-        """image: (N, 3, 256, 192) normalized RGB -> (x, y, X, Y, Z) logits."""
+        """image: (N, 3, 256, 192) normalized RGB -> (x, y, X, Y, Z) logits ((x, y) for the 2D-only model)."""
         image = F.interpolate(image, size=(GRID[0] * PATCH, GRID[1] * PATCH), mode="bilinear", align_corners=False)
         return self.head(self.neck(self.backbone(image)))
 

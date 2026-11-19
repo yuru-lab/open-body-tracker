@@ -19,6 +19,9 @@ train = [
     "onnx>=1.17",
     "pycocotools>=2.0.8",
     "huggingface-hub>=0.26",
+    "albumentations==1.4.3",
+    "opencv-python==5.0.0.93",  # same warp rounding as the release run
+    "scipy>=1.13",
 ]
 gpu = ["onnxruntime-gpu>=1.20"]
 
