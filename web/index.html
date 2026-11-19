@@ -14,15 +14,34 @@
     <p>Single-camera full-body 3D pose in your browser (WebGPU). Video never leaves your device.</p>
   </header>
   <form id="controls">
-    <label>Camera <select id="camera"></select></label>
+    <label>Camera <select id="camera"><option value="">Default camera</option></select></label>
+    <button id="allow" type="button" hidden>Show camera names</button>
     <label>Person detector
       <select id="detector">
         <option value="yolox_nano.onnx" selected>YOLOX-nano (fast)</option>
         <option value="yolox_tiny.onnx">YOLOX-tiny (fewer false detections)</option>
       </select>
     </label>
-    <label><input type="checkbox" id="track" checked> Track between detections</label>
-    <label><input type="checkbox" id="smooth" checked> Smoothing</label>
+    <label title="How often the person detector looks for you. In between, the box follows the pose of the previous frame.">Find person
+      <select id="schedule">
+        <option value="1000" selected>every 1 s, follow the body in between (faster)</option>
+        <option value="0">every frame (slower, recovers at once)</option>
+      </select>
+    </label>
+    <label title="Person boxes scoring below this are ignored. Raise it if furniture is detected as a person.">Person threshold
+      <input type="range" id="personThreshold" min="0.1" max="0.9" step="0.05" value="0.3"> <output for="personThreshold"></output>
+    </label>
+    <label title="Joints scoring below this are hidden (and not used to follow the body).">Joint threshold
+      <input type="range" id="jointThreshold" min="0" max="0.9" step="0.05" value="0.3"> <output for="jointThreshold"></output>
+    </label>
+    <label title="One Euro filter. Stronger = steadier but slightly delayed.">Smoothing
+      <select id="smoothing">
+        <option value="off">off</option>
+        <option value="light">light</option>
+        <option value="medium" selected>medium</option>
+        <option value="strong">strong</option>
+      </select>
+    </label>
     <button id="start" type="submit">Start</button>
   </form>
   <p id="status" role="status">Press Start. The first run downloads the model (190–380 MB, cached afterwards).</p>
@@ -30,7 +49,7 @@
     <canvas id="image" width="640" height="480" aria-label="Camera with 2D skeleton"></canvas>
     <canvas id="skeleton" width="480" height="480" aria-label="3D skeleton, drag to rotate"></canvas>
   </div>
-  <p class="hint">Blue = left, orange = right. Drag the 3D view to rotate. <span id="stats"></span></p>
+  <p class="hint">Blue = left, orange = right. Box: yellow = found by the detector, green dashed = following the body. Drag the 3D view to rotate. <span id="stats"></span></p>
   <video id="video" playsinline muted hidden></video>
   <footer>
     Model weights: <a href="https://github.com/facebookresearch/sam-3d-body/blob/main/LICENSE">SAM License</a> ·

@@ -5,7 +5,7 @@ import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/o
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
 // float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB).
 const POSE_MODELS = { f16: 'obt-h3c-fp16.onnx', f32: 'obt-h3c.onnx' };
-const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416, DET_THRESHOLD = 0.3;
+const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416;
 const HIPS = [11, 12];
 const EDGES = [[5, 6], [5, 7], [7, 9], [6, 8], [8, 10], [5, 11], [6, 12], [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
   [15, 17], [15, 19], [17, 18], [16, 20], [16, 22], [20, 21]];
@@ -15,6 +15,9 @@ const colour = (a, b) => (LEFT.has(a) && LEFT.has(b) ? '#2b8cea' : RIGHT.has(a) 
 const $ = (id) => document.getElementById(id);
 const status = (text) => { $('status').textContent = text; };
 const video = $('video');
+// Live settings (read every frame), remembered in this browser.
+const SETTINGS = ['detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing'];
+const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
 let backend = null, pose = null, detector = null, detectorName = null, running = false, generation = 0;
 
 // ------------------------------------------------------------ model loading
@@ -72,7 +75,7 @@ async function detect(width, height) {
   }
   const feeds = { [detector.inputNames[0]]: new ort.Tensor('float32', input, [1, 3, DET_SIZE, DET_SIZE]) };
   const out = (await detector.run(feeds))[detector.outputNames[0]].data;
-  let best = -1, bestScore = DET_THRESHOLD;
+  let best = -1, bestScore = threshold('personThreshold');
   for (let i = 0; i < grid.length; i++) {
     const score = out[i * 85 + 4] * out[i * 85 + 5];
     if (score > bestScore) { bestScore = score; best = i; }
@@ -113,9 +116,9 @@ async function estimate(box) {
   return { box, xy, score, xyz: xyz.map((p) => p.map((v, i) => v - root[i])) };
 }
 
-// Box from the previous pose: confident points (>= 0.3, at least 8), 15% margin per side.
+// Box from the previous pose: confident points (at least 8), 15% margin per side.
 function boxFromPose(result, width, height) {
-  const good = result.xy.filter((_, k) => result.score[k] >= 0.3);
+  const good = result.xy.filter((_, k) => result.score[k] >= threshold('jointThreshold'));
   if (good.length < 8) return null;
   let [l, t, r, b] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const [x, y] of good) { l = Math.min(l, x); t = Math.min(t, y); r = Math.max(r, x); b = Math.max(b, y); }
@@ -141,7 +144,15 @@ class OneEuro {
     return this.value;
   }
 }
+// [min cutoff (Hz), beta for 2D (per px/s), beta for 3D (per m/s)]: lower = steadier, more delay.
+const SMOOTHING = { light: [1.5, 0.01, 1.0], medium: [0.65, 0.006, 0.5], strong: [0.25, 0.003, 0.25] };
 const filters = { xy: new OneEuro(0.65, 0.006), xyz: new OneEuro(0.65, 0.5) };
+function setSmoothing(level) {
+  if (!SMOOTHING[level]) return;
+  const [minCutoff, beta2d, beta3d] = SMOOTHING[level];
+  Object.assign(filters.xy, { minCutoff, beta: beta2d });
+  Object.assign(filters.xyz, { minCutoff, beta: beta3d });
+}
 
 // ------------------------------------------------------------ drawing
 
@@ -157,8 +168,9 @@ function draw(result, box, source) {
   ctx.strokeStyle = source === 'tracker' ? '#50c850' : '#ffd400';
   ctx.strokeRect(box[0] * scale, box[1] * scale, box[2] * scale, box[3] * scale);
   ctx.setLineDash([]); ctx.lineWidth = 3;
+  const confident = (a, b) => Math.min(result.score[a], result.score[b]) >= threshold('jointThreshold');
   for (const [a, b] of EDGES) {
-    if (Math.min(result.score[a], result.score[b]) < 0.3) continue;
+    if (!confident(a, b)) continue;
     ctx.strokeStyle = colour(a, b); ctx.beginPath();
     ctx.moveTo(result.xy[a][0] * scale, result.xy[a][1] * scale); ctx.lineTo(result.xy[b][0] * scale, result.xy[b][1] * scale); ctx.stroke();
   }
@@ -174,9 +186,11 @@ function draw(result, box, source) {
     sk.moveTo(...a); sk.lineTo(...b); sk.moveTo(...c); sk.lineTo(...d);
   }
   sk.stroke(); sk.lineWidth = 3;
-  for (const [a, b] of EDGES) {
+  for (const [a, b] of EDGES) {  // 3D joints are always predicted; uncertain ones are drawn faint
+    sk.globalAlpha = confident(a, b) ? 1 : 0.25;
     sk.strokeStyle = colour(a, b); sk.beginPath(); sk.moveTo(...project(result.xyz[a])); sk.lineTo(...project(result.xyz[b])); sk.stroke();
   }
+  sk.globalAlpha = 1;
 }
 
 let drag = null;
@@ -196,12 +210,12 @@ async function loop(id) {
     await new Promise((resolve) => video.requestVideoFrameCallback(resolve));
     const now = performance.now(), width = video.videoWidth, height = video.videoHeight;
     let box = tracked, source = 'tracker';
-    if (!$('track').checked || !box || now - detectedAt >= 1000) {
+    if (!box || now - detectedAt >= threshold('schedule')) {
       box = await detect(width, height); detectedAt = now; source = 'detector'; detections++;
     }
     let result = box ? await estimate(box) : null;
-    tracked = result && $('track').checked ? boxFromPose(result, width, height) : null;
-    if (result && $('smooth').checked) {
+    tracked = result ? boxFromPose(result, width, height) : null;
+    if (result && setting('smoothing') !== 'off') {
       const t = now / 1000, xy = filters.xy.filter(result.xy.flat(), t), xyz = filters.xyz.filter(result.xyz.flat(), t);
       result = { ...result, xy: result.xy.map((_, k) => [xy[2 * k], xy[2 * k + 1]]), xyz: result.xyz.map((_, k) => [xyz[3 * k], xyz[3 * k + 1], xyz[3 * k + 2]]) };
     } else { filters.xy.reset(); filters.xyz.reset(); }
@@ -227,15 +241,52 @@ async function start() {
   video.srcObject = stream;
   await video.play();
   $('image').width = 640; $('image').height = Math.round(640 * video.videoHeight / video.videoWidth);
-  const devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput');
-  const current = stream.getVideoTracks()[0].getSettings().deviceId;
-  $('camera').replaceChildren(...devices.map((d, i) => new Option(d.label || `Camera ${i + 1}`, d.deviceId, false, d.deviceId === current)));
+  await listCameras(stream.getVideoTracks()[0].getSettings().deviceId);
   filters.xy.reset(); filters.xyz.reset();
   running = true;
   const id = ++generation;
   if (backend === 'wasm') status('WebGPU is not available; running on the CPU (slow).');
   loop(id).catch((error) => { running = false; status(`Error: ${error.message}`); });
 }
+
+// ------------------------------------------------------------ controls
+
+// Cameras can be chosen before Start. Browsers hide camera names (and sometimes ids) until camera access is allowed.
+async function listCameras(selected = $('camera').value) {
+  if (!navigator.mediaDevices?.enumerateDevices) return;
+  const devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput' && d.deviceId);
+  const options = devices.map((d, i) => new Option(d.label || `Camera ${i + 1}`, d.deviceId, false, d.deviceId === selected));
+  $('camera').replaceChildren(new Option('Default camera', '', false, !selected), ...options);
+  if (selected && !devices.some((d) => d.deviceId === selected)) $('camera').value = '';
+  $('allow').hidden = devices.length > 0 && devices.every((d) => d.label);
+}
+
+$('allow').addEventListener('click', async () => {
+  try {
+    (await navigator.mediaDevices.getUserMedia({ video: true, audio: false })).getTracks().forEach((t) => t.stop());
+    await listCameras();
+  } catch (error) { status(`Camera access was not allowed: ${error.message}`); }
+});
+navigator.mediaDevices?.addEventListener?.('devicechange', () => listCameras().catch(() => {}));
+
+function showValue(id) {
+  const output = document.querySelector(`output[for=${id}]`);
+  if (output) output.value = Number($(id).value).toFixed(2);
+}
+for (const id of SETTINGS) {
+  try {
+    const saved = localStorage.getItem(`obt.${id}`), select = $(id).options;
+    if (saved !== null && (!select || [...select].some((o) => o.value === saved))) $(id).value = saved;
+  } catch {}
+  showValue(id);
+  $(id).addEventListener('input', () => {
+    showValue(id);
+    if (id === 'smoothing') setSmoothing(setting('smoothing'));
+    try { localStorage.setItem(`obt.${id}`, $(id).value); } catch {}
+  });
+}
+setSmoothing(setting('smoothing'));
+listCameras().catch(() => {});
 
 $('controls').addEventListener('submit', (e) => { e.preventDefault(); start().catch((error) => status(`Error: ${error.message}`)); });
 for (const id of ['camera', 'detector']) $(id).addEventListener('change', () => { if (running) start().catch((error) => status(`Error: ${error.message}`)); });

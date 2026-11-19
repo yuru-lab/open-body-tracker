@@ -12,3 +12,5 @@ canvas { background: #000; border: 1px solid var(--line); border-radius: 6px; ma
 #skeleton { background: #18181b; cursor: grab; touch-action: none; }
 footer { margin-top: 24px; font-size: 13px; }
 a { color: inherit; }
+input[type=range] { vertical-align: middle; width: 110px; }
+output { display: inline-block; min-width: 2.2em; font-variant-numeric: tabular-nums; }
