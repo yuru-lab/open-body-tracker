@@ -1,0 +1,1705 @@
+{
+ "description": "ASPset-510 (CC0) training recordings of obt-body-v2: one camera per recording of 7 trainval subjects. Not used: the 3 official test subjects (3D benchmark) and 5 trainval subjects kept for development and evaluation (refused_actors). Order matters (sampling indices).",
+ "actors": [
+  "04ac",
+  "11ac",
+  "14ce",
+  "4448",
+  "7b5d",
+  "b3c1",
+  "d26c"
+ ],
+ "refused_actors": [
+  "5ff4",
+  "b8e1",
+  "eb61",
+  "a779",
+  "bae6",
+  "4d9e",
+  "c9f8",
+  "fb7c"
+ ],
+ "excluded": [
+  {
+   "recording": "b3c1-0084",
+   "reason": "bone-length/hip geometry gate (fewer than 64 frames, missing hips, or a bone shorter than 1.5 cm / longer than 1.5 m)"
+  }
+ ],
+ "frames": 43201,
+ "crops_sha256": "72fd3a290979d45dc1d0974ed0c5a4cba3de60b76cefb0dc80c4eae64eb6a4ea",
+ "xyz_sha256": "4e5d66693857fb54506c50c1d73cf4d6f27a43e63888077d7e502d6897f1aafb",
+ "recordings": [
+  {
+   "actor": "04ac",
+   "recording": "04ac-0003",
+   "camera": "left",
+   "frames": 188,
+   "crops_sha256": "c6677bbf2eaceea62d8367857a1e3f09abdaf09225ca7e37d498057bcbb04a7e",
+   "xyz_sha256": "0af9a973d23be5bbd71c37c105a1ded1e8cfb9365137059296a3ead178134764"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0006",
+   "camera": "right",
+   "frames": 185,
+   "crops_sha256": "49d85c5892a2f50f527c63e2f0a97e497bff2cc971ccb28db1d444c1eb346938",
+   "xyz_sha256": "f25f849c914c7c5b26ed5a34371f8f15286cb91297fd7d19afe00ea3d1453615"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0008",
+   "camera": "right",
+   "frames": 598,
+   "crops_sha256": "799d78916d14712cb80a6fa8833487ecaf9f768a16c72f68425edaaf3f7b304f",
+   "xyz_sha256": "ba7475aa2d3fec1797d6e7375b2be3554edca980e3efaaf94ff12c880d718e81"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0009",
+   "camera": "right",
+   "frames": 343,
+   "crops_sha256": "e4299af2432f2a3184c68e87f8aab24f911547fd66dda6dc84ff40236ea0bca1",
+   "xyz_sha256": "bbe346c8006d6edb4b4324de42c78c9947ac933450f16f33a014366326f3f7af"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0010",
+   "camera": "left",
+   "frames": 288,
+   "crops_sha256": "d119b447e6977a01cab74ddcb0fd9443ae67552b858f66ec2130766bdcb8600f",
+   "xyz_sha256": "f91c61dc6327fb10f68e4d998eaec66e1c3598b1d66d75284a2df35f8c836e22"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0011",
+   "camera": "left",
+   "frames": 203,
+   "crops_sha256": "27c87503168864321651ac8756b3cc7454e43894a4d9d7673ed1fab0048df847",
+   "xyz_sha256": "ca34ebfa7d0295dd8d1b4269fcb4c38c222bcfe0d2d4b372e130f920af5fe4ca"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0013",
+   "camera": "left",
+   "frames": 121,
+   "crops_sha256": "88eefa65ca64d2451b2d5fe3630d279378f9dc9fb82548dc07c34ba4d7abdf8f",
+   "xyz_sha256": "78c6ab583c4736659560fccb74680929e2004af4f4228dbb1d32a591f3c01093"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0014",
+   "camera": "mid",
+   "frames": 420,
+   "crops_sha256": "646b4dafc9942079eac8504a5c01e93c51558062fb0e2c67f001f6a1c1c4baef",
+   "xyz_sha256": "e0eed74e27c55dffd7e6d2f97cfce632d962b7ab779e423eebadd6297817ba07"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0015",
+   "camera": "mid",
+   "frames": 483,
+   "crops_sha256": "3ad883386b5aa8cdead868253b4522a5b65657b99d552dba525b5ed475601603",
+   "xyz_sha256": "698bbc68d07d09c8ad51067ad9d59fa7cb089ad7333bcacaa47811cc00da1663"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0018",
+   "camera": "mid",
+   "frames": 169,
+   "crops_sha256": "8395cea0bca3a85bd7632fbbad53aa8f0d5250ed9ff98d017eef82d0ffcb90ce",
+   "xyz_sha256": "129ac03e62f7a3e3a1fd0ccba34445af3e18688ebc802a4f6c65ec0897518a59"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0020",
+   "camera": "left",
+   "frames": 212,
+   "crops_sha256": "78450296631d28cfe8c74693140f55ee7880d2a0a0ede80fd21bfc1ddf0d9353",
+   "xyz_sha256": "f57bc5531b61fe70ebb3f95b0a1260755de7913c9143ea60b00a06f0fc622885"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0021",
+   "camera": "left",
+   "frames": 131,
+   "crops_sha256": "13b62a6978bf44d1b6834020edeb17e324dd92e6b1023ea3f69e45843e2d4e87",
+   "xyz_sha256": "b94c59347946c1221185bcc82f08f0762e1d12825071e92932bc480a0e698275"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0025",
+   "camera": "right",
+   "frames": 160,
+   "crops_sha256": "d0bc8c4fef3f9ba113ce816a993ef1debdb3ae0bf2d708c5629dbdd0bf682ce2",
+   "xyz_sha256": "dc383194eab87763f8a5372e5d01477f5ca72ffdaf564bf5ca5b34804d9c23e6"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0026",
+   "camera": "right",
+   "frames": 132,
+   "crops_sha256": "14d417573d2cdfeec321673029354f4c9914b543cfd4051f1827eff79fb46395",
+   "xyz_sha256": "ef4e7fd23e62f8fd303b3b31f0bd9389cb0af47fcd05eab87bb1510746127e7e"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0034",
+   "camera": "right",
+   "frames": 145,
+   "crops_sha256": "66671909e37ee4be325f687b7154cdd50c58cbfc7d8a0e84422de27d55cfa2d2",
+   "xyz_sha256": "9c36a3c2e166b67efdb2eb48409364435e564640ca1b68bd23685f1c396b0201"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0040",
+   "camera": "mid",
+   "frames": 153,
+   "crops_sha256": "3192181ed12f95fb1cd127fb6d8dfbeefc8787663f4785089e8af350dbdccf1f",
+   "xyz_sha256": "20ac6f7293502d8fcaf939bf5d66f08640dc6a51b8b34dc72d17edc0a56f091e"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0041",
+   "camera": "mid",
+   "frames": 370,
+   "crops_sha256": "b265459d64f2f0390e8563ec0c1d18a2bf2e5bc54ce8cfa5c20478a105ee2c2e",
+   "xyz_sha256": "b66bbb3cfbf91aabac5a794a8b5a0557001713120a549a87118f9a3aeb379d6b"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0044",
+   "camera": "left",
+   "frames": 105,
+   "crops_sha256": "381c8712695c9a6514679eb0906a62fc870e64a124c2b961274602fbd22885d2",
+   "xyz_sha256": "0710a1fc1b3bf5bd7267c9661995cb02ace2c30ec328dc381cec77e14f6ab842"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0048",
+   "camera": "right",
+   "frames": 154,
+   "crops_sha256": "650f5d9773d6442a3eeb495519acb7881a36d359ddc6a5010d925c046e63c82d",
+   "xyz_sha256": "e7eb37926f87e413b732d39463ffdc3264378b61dce567b7c79562da51cae195"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0053",
+   "camera": "right",
+   "frames": 130,
+   "crops_sha256": "ab4200d2fe7fd697c02978ec8045721f9e224cc0737c2e10ec07e58448cda5ae",
+   "xyz_sha256": "f68e9ff06fa30c1aeeac48210071ce995babdc3465c7d922510bceefc5c5de3a"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0054",
+   "camera": "mid",
+   "frames": 94,
+   "crops_sha256": "7832d613c24e95933e49df34f4d740e4cb6982d77b943b5e905b907a42482cce",
+   "xyz_sha256": "70f32a776ff73ddbd17c97625c9463a62c623f2191306bacbbaa9f56c08c31a4"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0059",
+   "camera": "left",
+   "frames": 194,
+   "crops_sha256": "8713a81cd695a1a067feb4cfb54a35e558c101aa041f6b372858b69edd2aef6d",
+   "xyz_sha256": "b44530161ff5e722a5470dc9b0da8010097cd452e459ea42ee2561140a79ef41"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0062",
+   "camera": "right",
+   "frames": 155,
+   "crops_sha256": "8479d8b49684749244da8db6e81584c17d4f3538c8b634f93964e07659843a1d",
+   "xyz_sha256": "09674e4e337595c9c9d4763862276b2ae979d1818024f37d561ffae461ae5006"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0064",
+   "camera": "right",
+   "frames": 114,
+   "crops_sha256": "7d39af8bdc80593b1923c9895540a901daf5a45cabbc4f1b17fdfc29b22c6569",
+   "xyz_sha256": "75a97706c6895fc7692882b6c86ec5185e29d7d06c101d5f35b7d66f14bcf58d"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0066",
+   "camera": "left",
+   "frames": 233,
+   "crops_sha256": "9a07776df6042c1f0c84bfe95462cc2999763feffe2eff088737ab34797c5d3e",
+   "xyz_sha256": "61c96943c94d150427cae74d68709ca90b29c9c13988c22ea7e2e3d8357470b0"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0068",
+   "camera": "mid",
+   "frames": 89,
+   "crops_sha256": "1352e55e4e9fed71827aa144c60242b279da9f8816afa090a668a094f151e735",
+   "xyz_sha256": "4fce47a99b84dfed707e1494d84dab514a392f8374440cfa530420a148586bb1"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0073",
+   "camera": "left",
+   "frames": 149,
+   "crops_sha256": "0ecf905d980af7266117c86b7d43aafbe6747ff91a83d01ee38442b868915bec",
+   "xyz_sha256": "36b88b705de2922d2ab63d29fe2ccb714a501abdcfd4dd9091b82ca944a629e5"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0074",
+   "camera": "mid",
+   "frames": 359,
+   "crops_sha256": "5c6898d3f98baa8a1f261dbc68318c5dbca5dd21a2f08bf66b1e95ad05391f58",
+   "xyz_sha256": "bd962b27c4e3bccf30abf1440d596a2c3ff7e275492a4301b6b30db7f6076c3f"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0077",
+   "camera": "mid",
+   "frames": 163,
+   "crops_sha256": "27b29ae2fce51f141cd69f7256f59a71e5dbafc3a050006deead39fbaa32ee4a",
+   "xyz_sha256": "99735f7116892d0993f054984f5636312dc83f5290c0067045870093087686f3"
+  },
+  {
+   "actor": "04ac",
+   "recording": "04ac-0080",
+   "camera": "mid",
+   "frames": 247,
+   "crops_sha256": "36dc7a46b461e72f8caabebd90650b506f80526e5154739a893ba2d3d28aeb8f",
+   "xyz_sha256": "23b8fe8c3981e3853589c65cb6fbc2b142f36f9fecd566a7f7d79a904f6fd5d9"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0001",
+   "camera": "mid",
+   "frames": 170,
+   "crops_sha256": "41533ab59e54c69eb620fb629fdc66351bcdc90f261e6a242684213e9462690b",
+   "xyz_sha256": "be4942b18e41b7b5f00d610eea9d13b5259461c2b711117a487d429a6be5dffb"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0005",
+   "camera": "left",
+   "frames": 200,
+   "crops_sha256": "496c27c06dda9579f7aa3d69d5e832889cf432507dec661069922bcd63b7aece",
+   "xyz_sha256": "9d4c0effc8ca2336eb742b50664d23ee3b3665815bec70d7586167b70815fe7f"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0006",
+   "camera": "left",
+   "frames": 367,
+   "crops_sha256": "20411299dca8dc0480ecf60a15394b8da893043da75aa69146644641fef02919",
+   "xyz_sha256": "4485baa92991fb89c01096dd899738aaae9d690d7bace1194920a5bcb85bdec5"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0007",
+   "camera": "left",
+   "frames": 334,
+   "crops_sha256": "09ca49ccbb1bcd9c5c3809e9439577cc6347a528a39c28e4a050c1104fac4e0a",
+   "xyz_sha256": "a03c9a88f4b601c01e9a10768485240fcf051a5076a74d3f5f863d1d8c215089"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0008",
+   "camera": "left",
+   "frames": 249,
+   "crops_sha256": "ad495a8407b304cd278561cda245db094ec5f2fd33a527f4fb492c78b5d6cafd",
+   "xyz_sha256": "90a8ee7c2329056ce679a3415692df6181d03386214ddee08bd5d2d5a06fd835"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0010",
+   "camera": "right",
+   "frames": 268,
+   "crops_sha256": "b17da00f0d0b444cbb58c14295209272a0f3671cc45d948a569c4a00c705fe80",
+   "xyz_sha256": "bb1944765c032bb8315dcdabedcd232805fc272b417c1a94de93ee31b3fc1a8e"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0011",
+   "camera": "mid",
+   "frames": 108,
+   "crops_sha256": "d186b636c8b91a09d401acbefc765b0d49971978e63198d858ca9cc1df26f43a",
+   "xyz_sha256": "d0505c6c01ab64fb65f1bdf50cf393ca4016b01bc9e35832f1d292c3b1ecfb15"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0015",
+   "camera": "right",
+   "frames": 193,
+   "crops_sha256": "a76a6c1561d87fa8a7d2183c2445ce36de6485a957ec1d2d686c922b496c612b",
+   "xyz_sha256": "46d8eb991b42c96dfbd26f06cde56261d5396413909d626059834fcbc12f71e4"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0018",
+   "camera": "right",
+   "frames": 137,
+   "crops_sha256": "d92eb9073f6c29f973431201cdc84dd4639456996921780af109e0a50547a526",
+   "xyz_sha256": "7abbb03f7d885a774506e7c54032f71481beaa81658046a0cfcb18539a9e7f62"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0021",
+   "camera": "left",
+   "frames": 172,
+   "crops_sha256": "68e405f49f41558cf42b9e737a7884c1d7fce8e7cdb88e7258e49efae9505c1d",
+   "xyz_sha256": "5185127c6c78fc668e9df3239b733726b5a8113794f8605df842700ccf891bce"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0025",
+   "camera": "left",
+   "frames": 136,
+   "crops_sha256": "866e9438fb903936c4dc6d0afb4f58bddaf044d8ac54d4578a7b6041698874a0",
+   "xyz_sha256": "25caf100103a133072525d8840dd1ac03ee56b29eca867d02d788acfc4deec24"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0026",
+   "camera": "right",
+   "frames": 133,
+   "crops_sha256": "b965387cfecdd14edd25acab52ebda63138dcf03d61e5edda28065808f027598",
+   "xyz_sha256": "4d83dedae3817437f07d5486dd12d70e8b685090d649577782f86231740f77ae"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0031",
+   "camera": "left",
+   "frames": 144,
+   "crops_sha256": "e14e2a8d79fbe412142b149cb3e8cadb4fe04808842b8c853aba174716beafa9",
+   "xyz_sha256": "a4cae7c89e2050fc84f6a13ddb4a09a7bd829da0e1d04412fe6b06c5dfa2682e"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0032",
+   "camera": "right",
+   "frames": 67,
+   "crops_sha256": "bb7199000af850a1289e1f11c69b6f9175939d681d18ac23f36dea6912dc2919",
+   "xyz_sha256": "72d95d94c94dd132819c59f0f75414776efcf221b8987ced47b301528480b6df"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0037",
+   "camera": "left",
+   "frames": 108,
+   "crops_sha256": "f7fc44af910b0895d6f65a2c171ad4ea4fedbcaa140fa189cd5a37f856b227db",
+   "xyz_sha256": "d05f2f040fa8508f73ab1b4f199943f8dfd71d048ed09fab9cc9af0bdae13bf5"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0038",
+   "camera": "left",
+   "frames": 194,
+   "crops_sha256": "dd4bca51bae8475a608a6b3c2bb8b0041f059ada8d41616e886ecba1dade4c57",
+   "xyz_sha256": "bfda4cb1f3e77b58974786578ba24e669ceb3cc5f5d40c3fb694ad5f03c5d4cf"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0042",
+   "camera": "right",
+   "frames": 116,
+   "crops_sha256": "351b681122aaf66f2f605bacb034bbd262bb59e1df078ad67bedc2edaab562dd",
+   "xyz_sha256": "18c17071e343f47bc8ccfb0308146521cd5cc7cf26f1056b23a66e8f3350076c"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0043",
+   "camera": "right",
+   "frames": 149,
+   "crops_sha256": "b8739090f477824491d754c6bd13ac69235f34c969acf06e87c21a4f75bb9364",
+   "xyz_sha256": "bc53e5a1ba441bda30dd023a6f44c10d009b1758c09b4b9233cf22d061692738"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0045",
+   "camera": "mid",
+   "frames": 229,
+   "crops_sha256": "59cc08ccb044e688e6ced7bfba5778643d410274ae9ddb62e8a9c37bcb485d0c",
+   "xyz_sha256": "844df09da2d308d289830ac54a754221caf36ded3a48368854fe7e526d8d5044"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0048",
+   "camera": "mid",
+   "frames": 203,
+   "crops_sha256": "ea6ccd2baa9fbe57ef50a8e71caad3560ee305112633fed2aa7e5ee9a5fc82aa",
+   "xyz_sha256": "bd7d5ed929bde47974a99b68c694ac63afd96ece32271b93af7c97123e9564f0"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0053",
+   "camera": "mid",
+   "frames": 152,
+   "crops_sha256": "009c72c7426ee3266c0b8113f56ad0ceff59833ac0178d8e2e25520c81a61e79",
+   "xyz_sha256": "a94f8fab9b24fad31257fd6f81c8560e5eac0c0bbfdb28fee9bdf946b958ad76"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0057",
+   "camera": "left",
+   "frames": 189,
+   "crops_sha256": "a8a2bbfaf0230144213b2238c2d620ba66e662b875fadfdc5920ed777ba5cf11",
+   "xyz_sha256": "081a61280a1ae7aad7a04bca26d0ea693fa112eccd0448aae9274aa9bde63fd9"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0058",
+   "camera": "mid",
+   "frames": 157,
+   "crops_sha256": "afebf5ce3a442c365c95aaa353f9f4871599bdded87479bdc29ef2e5d240f88b",
+   "xyz_sha256": "903a2eda2c9f7cdf65c6702d43d7ef5a56276bf8fd4fcc8fd20eec1a5069d893"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0061",
+   "camera": "mid",
+   "frames": 175,
+   "crops_sha256": "e1a7d11bc0c8736ab9c4fbc96f7417ce05e7c7b8dba5f49322ea71ecfc258196",
+   "xyz_sha256": "c1771e50a773edb4cb391711f556e63fba7b44693910ca88006360ba0f7d0528"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0062",
+   "camera": "mid",
+   "frames": 465,
+   "crops_sha256": "bf06f8ff3e6d35cbd08d38a4d2400784d2f825ea57ffa8fc7ec627cec083b91e",
+   "xyz_sha256": "f60041eb1b5409712f68b8ddc7ef455aad322624381d30fe361f0faeb41207b5"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0066",
+   "camera": "right",
+   "frames": 194,
+   "crops_sha256": "c574c755dd7d179143c52e58d77281140aff276057719a64eb6e46d74eaad198",
+   "xyz_sha256": "a706e9f28fab5c10098bde48ef59d164083b13c6523f0c1751f3bfa37c7b45ba"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0067",
+   "camera": "right",
+   "frames": 114,
+   "crops_sha256": "0f0e9a8444e102279279a137becb64cff86e87d9d7386d15c635caf87d71c65b",
+   "xyz_sha256": "06906b8ecc195db5d2de047bd1eae2584d641c77eebf7852a9fccb9f92720f64"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0068",
+   "camera": "mid",
+   "frames": 136,
+   "crops_sha256": "bdc2f9e513ab32560bc35670ceec6bf89d682f291311881916be8e55915ca40b",
+   "xyz_sha256": "b12a2f9a59a1b9307d8b0a74a896e2eeab485795485c6765d27d27a96e21880c"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0070",
+   "camera": "mid",
+   "frames": 129,
+   "crops_sha256": "515249d81b69249f6fcdf78ddd2fdab558797e658647dbaa68fd5f37cbc92746",
+   "xyz_sha256": "ad6f8dabdaa4edf9c89db5b8c15094d4534b16ee43992f3bdbde71861d6d8478"
+  },
+  {
+   "actor": "11ac",
+   "recording": "11ac-0077",
+   "camera": "right",
+   "frames": 195,
+   "crops_sha256": "753ad2c037a1cc20335cd06767fca34f39a636e90141bc806630158b33689a0a",
+   "xyz_sha256": "2397c20683cd3d28b7df5694ea5b2a5fc799a7ee43b7b658ea79a8efa4925f98"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0001",
+   "camera": "mid",
+   "frames": 328,
+   "crops_sha256": "d08d0b2f7cf7634279e9114db0caf058154b4b9d69fb8062d3ad742b3668a88d",
+   "xyz_sha256": "accb92070d9cfb1fc6f82daebc9e8e69e33d6c0e89bc2cbe3f1330eb03a1b244"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0006",
+   "camera": "left",
+   "frames": 209,
+   "crops_sha256": "02e80456c6cdc1e60adab858384149932a8455f32d7634902af5355655a6d9e5",
+   "xyz_sha256": "1c3fb4d190e330897d62398a3626cf3a31f7a3b6c2392fa09bdf3b06d698a7ab"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0007",
+   "camera": "mid",
+   "frames": 786,
+   "crops_sha256": "b8f54373e08f112e2717c15738a2401344716d9f40aa3a78fc2b4f115320d7b9",
+   "xyz_sha256": "bb90163f8de2d246aadd25fe8fbd17bcdcdd0525a510a58b80b52b75ad8792b2"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0008",
+   "camera": "left",
+   "frames": 399,
+   "crops_sha256": "88e71b420341b3012277e13af75f5638bf6bc661debc364a21d7224c13bf05aa",
+   "xyz_sha256": "ad2df916d1e4856d8e529e6ba7db34a80a88aaba43d13848d5e1461e5ca06745"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0009",
+   "camera": "right",
+   "frames": 433,
+   "crops_sha256": "21ca084fa2282d690b8caf1f6e96c96bdb67fe4486710b2dbb50cd98626666f4",
+   "xyz_sha256": "72265b55524901f1f7efcd4843778ad7807454d302cde59950c5710c71fcb0ad"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0011",
+   "camera": "right",
+   "frames": 285,
+   "crops_sha256": "9fe797490a508207e06e03298524061d6888192c272f34f21b315a57159400cd",
+   "xyz_sha256": "15089aab3c5332007be624b13cdec94076464b399d8b1830fc4acf60c2335a43"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0012",
+   "camera": "right",
+   "frames": 632,
+   "crops_sha256": "c5731dfea993c9c9da557256e20299e918307fbac6d002a4bbaaaffaab3d3606",
+   "xyz_sha256": "60dbcf5d0591855f9ede181f99a5d3fe4843c5ee77212f6fc6a86ba13caf8647"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0014",
+   "camera": "mid",
+   "frames": 354,
+   "crops_sha256": "ebeb20a9b4e9f5887557b58202f8120d31101df4f84df4252e805bda1fc2d788",
+   "xyz_sha256": "69e92045a71face4be36aa627f6bd49968cdfe4c93526108bab817ba0a09d75a"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0017",
+   "camera": "right",
+   "frames": 157,
+   "crops_sha256": "ccf700bb21f859cd04d8fee353a608218821d8ca329c2ecd562598998cf8660a",
+   "xyz_sha256": "575cbd31f6417f389cbebb7e88b540c1f294a4b96b2c6588a1e77ad37255b043"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0020",
+   "camera": "mid",
+   "frames": 168,
+   "crops_sha256": "a1ce0ce81144c16e72f5cc71d5d27cda96f31438ca852371b639107e5c57c6d8",
+   "xyz_sha256": "3a66fec5ec2638b5589874f6dc046ebbc734ec5d996e913e4e48bfad8f749ce0"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0021",
+   "camera": "left",
+   "frames": 310,
+   "crops_sha256": "857c287971dd3402ed4ff71ecb103ee4f85f7debd48da49b130592c4d670453f",
+   "xyz_sha256": "a3f7916b06f99c307cf9d0ba9b7cf61154315aa16904adf85ff010d6a21bb55e"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0024",
+   "camera": "left",
+   "frames": 161,
+   "crops_sha256": "5b5a874e152adc303ed8e4d31ecffff9f40c4032053700fb86f99ada4c026c6a",
+   "xyz_sha256": "e91bb7e02abfb04265c5b2d024aed609240c743f1db386ba3859c68ccacd6ca2"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0026",
+   "camera": "mid",
+   "frames": 110,
+   "crops_sha256": "7ef13c8d67f7014e3c8a7527f75d9d215bc0c06e203b5e6495f896e42e0a6d58",
+   "xyz_sha256": "727d4060c7e4f9e200cafb520da61a2800aad848382fbab49aa2a032e534ff4b"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0032",
+   "camera": "right",
+   "frames": 115,
+   "crops_sha256": "c376aa94aad0784644982020bcebda96c9dd67052c7eab22f91d324a994645e4",
+   "xyz_sha256": "f2b1901205d0cabcac9ad4f4b710c05ddbba90c14cc50923baddc00531d986c1"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0038",
+   "camera": "mid",
+   "frames": 206,
+   "crops_sha256": "3929c68aad254498dcf76905657445075d9fd8ed75d89b55256bff431d1f19d4",
+   "xyz_sha256": "55bb776b10256948da77eb39ad1e0a97d4caf194df411996e7c3de9ed499d6c3"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0041",
+   "camera": "right",
+   "frames": 160,
+   "crops_sha256": "5bdbde82995e30238719a8253b27535f7e7a6e7850123f350b8af2afc7bd8045",
+   "xyz_sha256": "eee89504e0b58393a82ffcb9bb36e086e3a1fcc9602341ffac527d31ca00de37"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0042",
+   "camera": "left",
+   "frames": 86,
+   "crops_sha256": "c9a7aaa217133e52b13ae8e10dada593e0d12a59f89bbc33898f13c156f2478a",
+   "xyz_sha256": "af467a4a342433be006ca5d6f2b5a23cd94a7e45ffcf7ea67a916a62934be329"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0053",
+   "camera": "left",
+   "frames": 225,
+   "crops_sha256": "e7c5b6bb79aa795c05b3880899a0963bd0dd967ce4abb1403f077e21987fa1f3",
+   "xyz_sha256": "21ec634e015cd12a1848eda59a264796637fcd419724210d52402d80d5229e41"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0058",
+   "camera": "left",
+   "frames": 143,
+   "crops_sha256": "1fc903ea57ef50debf4f23af53793b90a1e987c083b94ab47273b67b38bc0266",
+   "xyz_sha256": "e947b68a71eba7fa2d51e0a67c33874615d6e4a521c3b0e532be4d8f0b2b74ce"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0061",
+   "camera": "left",
+   "frames": 120,
+   "crops_sha256": "a76fb54593e08dc2396ae5bc32b037a6e099f22835d7d670d252d51f889c9d9b",
+   "xyz_sha256": "c8a6d4920a14886fe3a4e84b0a5da3dcbf8fb834dc8e1e256a1f38ce262cebc6"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0062",
+   "camera": "mid",
+   "frames": 351,
+   "crops_sha256": "f314ee89e981b075517e14394616c73eb0b25e8e132d6957a6376a8c32473f1c",
+   "xyz_sha256": "80db1b5827b57792753248550468a2c569262d050c1b71a7bd82f4648d15b53e"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0067",
+   "camera": "right",
+   "frames": 188,
+   "crops_sha256": "e9fadb57a9ebe5d368dcba08b569882a14a647e14b1368b58c68e3b7a7f08a60",
+   "xyz_sha256": "abb62838dc244a6df843d05093fd7cc78a0486ed77a3d206f7162804226aea33"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0068",
+   "camera": "mid",
+   "frames": 119,
+   "crops_sha256": "ac1c1e72251621ab2cbd9094a7785031a2a5b0147e1eb0dd874857a4e41ef49e",
+   "xyz_sha256": "27f90ccf0e25e1895f19a4450aa2ed9c46f629eb2f153c63ffd765fe09aa66c4"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0070",
+   "camera": "right",
+   "frames": 150,
+   "crops_sha256": "6a48d93ef41fb1ace9b22f40dfabd6b5495093b0ac94104413bc1f4ae0c3fc0b",
+   "xyz_sha256": "44797f2bb929849c94346f13980eda2c3b0ef817a2f0d91d748a41babd5c9518"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0073",
+   "camera": "right",
+   "frames": 161,
+   "crops_sha256": "bd87bb086dde5fbfa9475909e08c234b4d05f555d7ee7c32a101dc340a8c690d",
+   "xyz_sha256": "2c9e6383165cf235a735ce553aed0388f0764159ed595bfd213ecdf47a039e01"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0074",
+   "camera": "mid",
+   "frames": 116,
+   "crops_sha256": "d1b3710c181ce8ae1425e223c85f42c9ed46b1ea2122f06722271516b86ed7bc",
+   "xyz_sha256": "1d7d2dd7c00a26d77857e6606cf1e444c6006231b8f28d265221d38d66ae5255"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0080",
+   "camera": "left",
+   "frames": 189,
+   "crops_sha256": "13738e7d608b0cafb6b3cb41dfeaec3d4626660a4901ad234d95e6a69a762125",
+   "xyz_sha256": "c0f7496547f91466e3621df73e4d066df19f09d8b792d4ef9bd622ea48334491"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0083",
+   "camera": "mid",
+   "frames": 246,
+   "crops_sha256": "d79611ec1af73de0da27196340ba4a9f17a47e1243f2885ee915d5217e71ab01",
+   "xyz_sha256": "9d78641ca03ea9d3f9297132732fff72079045cb6fe63cd672713494fb57c933"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0085",
+   "camera": "right",
+   "frames": 330,
+   "crops_sha256": "8f47fd958d546035acb0081356e97d4937e52ac36c9a171583c223ab51dc554f",
+   "xyz_sha256": "aef037fcbeec51c6770265b6a88f9c379ffbfb97badd9d345974f455b4e68a82"
+  },
+  {
+   "actor": "14ce",
+   "recording": "14ce-0087",
+   "camera": "left",
+   "frames": 218,
+   "crops_sha256": "4751bbe272c0de9c7d5b7c114f8e2234b70ff11ada6c66f71ecb357edd5112fa",
+   "xyz_sha256": "c8957a91e30a9da7d0b24e423a6b0cfacb8b4bd8b70de0bc5d42c2fa41697af9"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0001",
+   "camera": "right",
+   "frames": 138,
+   "crops_sha256": "53aaae957a21a96d3c098378ad23d7afdedb439d039d68cd9999ef8439b44544",
+   "xyz_sha256": "a0d05db98a20496eaef2ae1bcba2e1a0d943c9277389c6c98bf1f7b4702a0743"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0006",
+   "camera": "right",
+   "frames": 233,
+   "crops_sha256": "7641a4edf1dc098c89fde78636fbe1fa37573368375856cb8cb0bbd912b49d85",
+   "xyz_sha256": "fdbfdce17163674b28d67889f8eec4651b87800d6eca41516d0843ec3898e32d"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0007",
+   "camera": "left",
+   "frames": 524,
+   "crops_sha256": "829b0e41dbe923a137ada4cda005fff329e7323477f988a5832192ecaf5790ca",
+   "xyz_sha256": "86ca2e57030c366817cc8539254450d1f4c2692f4d4cd5361741eeaa3b240abc"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0008",
+   "camera": "left",
+   "frames": 280,
+   "crops_sha256": "9c26ad181bd546ece7a9dbfa9ed2ea5466792af929019fa3aaeb307a0b814558",
+   "xyz_sha256": "6ee816ddb6e335e7d66d7e09af29cc5af9e90f354f5798ed2866d9a7a7da4ec4"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0011",
+   "camera": "right",
+   "frames": 185,
+   "crops_sha256": "f6aa6538e743095c017fddd36a4bb269eb907142d75c890e84e63a10923c539c",
+   "xyz_sha256": "2f82bcd221516d573e46fe0245455ff7aab5d0ed1b2a7978df60cc39fab21ac9"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0012",
+   "camera": "mid",
+   "frames": 95,
+   "crops_sha256": "dbaaa743c750132e197d9eb854c8fe7435b4628923958f2125373a74c4b56df3",
+   "xyz_sha256": "e1dd76d45585030a9de3f4a494b889b142363b6624bfa632f8b34aed8ae8879f"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0014",
+   "camera": "right",
+   "frames": 117,
+   "crops_sha256": "2e4656af36286935f98e8b0f6ac804c14a0bba3a2af926cb57ec047a53e658f1",
+   "xyz_sha256": "7e973ffe1dc921b9d38265582fee2b669d714029493fe9f2e299bea01e9771c0"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0015",
+   "camera": "right",
+   "frames": 312,
+   "crops_sha256": "1060eab9cb90d73eda0927166bd9a44fd84d66b4f25767696bca0ab013e2b116",
+   "xyz_sha256": "73bc3bf97394debb5c49c78dfa4ef6bb576b973688d86581127b6680ceb3baa6"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0018",
+   "camera": "mid",
+   "frames": 204,
+   "crops_sha256": "363bd5b1000c9dfeb516098bac3238e5b671fe2ec8842e1c5470110ad77f930e",
+   "xyz_sha256": "6e2e745662ae4f6a7b2f783a0ad07b0ba3b094866a3f4f856a7754889497d304"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0020",
+   "camera": "right",
+   "frames": 142,
+   "crops_sha256": "d6832b2efe11f1c202f7bbdb970cd98e869354ab2f6d520758b2b4bd4fad9a7e",
+   "xyz_sha256": "5af4a7d09b9aaaf1c44bc6a09797dbf10901db3ee5bec2dbed1b21204e67f15d"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0021",
+   "camera": "mid",
+   "frames": 121,
+   "crops_sha256": "c80a1478e334ac1639d3a8dc3c8baef585f934d36c1ab90f22d185cf5e4d5072",
+   "xyz_sha256": "454622f62fa899d2c2f98efece5304b0756d4b7925b6a022fe6dcbc195b1795a"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0026",
+   "camera": "left",
+   "frames": 117,
+   "crops_sha256": "9924a606ff297709322807d9819d22c820a907c237898e991433cebf27b12fd1",
+   "xyz_sha256": "ddb7111ff9d8d64d7321d07b1e1e4e379976dd36caf2cfea20d90007fe0c7d7b"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0031",
+   "camera": "mid",
+   "frames": 221,
+   "crops_sha256": "320f0b1e5115b5b1e80770c01be314e0a27ebe159a4e701053b3c0ca9ca11874",
+   "xyz_sha256": "fecf40200bc1e51100676808cb2dcdb8fb41c1ec64ff73f0f5ca5fe20349e60e"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0032",
+   "camera": "right",
+   "frames": 143,
+   "crops_sha256": "c94517aa323fdfdd43488d1823e52865f053483a0561558cf87a00056cec9b83",
+   "xyz_sha256": "2b52bda669df2f1c135de73bf1cf0836440f140492b2dc4619dba798f7caf06a"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0034",
+   "camera": "mid",
+   "frames": 233,
+   "crops_sha256": "4f343be7462b8ef5d44c77ac46bf2f282822b3702e191890c3bf085e89080849",
+   "xyz_sha256": "9833a8a36edd0badeb820e0c345dfb69e28552de324e4eb6ac91ee03326e738f"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0037",
+   "camera": "left",
+   "frames": 261,
+   "crops_sha256": "6c47c7172f8aa1cc0683ddb2088a3ac155cd9933b5e3b9d3b32400c45c3cae27",
+   "xyz_sha256": "2d0da6f1eab6be8b018c7c5517df365c33f66a3c411f33de10f3be512cd29dda"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0038",
+   "camera": "left",
+   "frames": 168,
+   "crops_sha256": "fc8e9359b5ed05d2b50327cb3faff039c2bc0183d920aa3e1efb71f94920926b",
+   "xyz_sha256": "b8f71a6a4b51397fb12314cf6d3678173fc054ff842bdcfa041475bb5a851231"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0039",
+   "camera": "left",
+   "frames": 152,
+   "crops_sha256": "e55d3b445ebc4126a2eb42f37ac41e02800fc9e96d2ae299af126fbd73adf085",
+   "xyz_sha256": "1681d2450a2467394692444e20ba82a64206110bdf5062c1d5815eb34355642e"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0040",
+   "camera": "mid",
+   "frames": 139,
+   "crops_sha256": "6cc4f8c709baa184f37a36a76894c669d61686b98f30bc186636f6473a9f3deb",
+   "xyz_sha256": "48341e6f92fa843c5761a9eb299b5152c200c11400df7720d1c232ac975768e3"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0046",
+   "camera": "mid",
+   "frames": 186,
+   "crops_sha256": "3ee9b9502b0dc1a40369ec81da7fdca59b10f1b71007aad33e5543754a99fd09",
+   "xyz_sha256": "be4ea3a61b4036c105ed68fee01cb12c807344fc17944bfd014c05bec40d37a7"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0047",
+   "camera": "left",
+   "frames": 158,
+   "crops_sha256": "2369a842c14831f266160e303f0be61d95b2477f62bb317fb58c6cb241bf8939",
+   "xyz_sha256": "1e5e393a48d64ef0288e72e369d28d4d01ca83c985f8aaf3694dcd0533ddc6ce"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0048",
+   "camera": "right",
+   "frames": 190,
+   "crops_sha256": "0a0e3c7052353223ee0623af94f6bed88b2c21bd9e08b8c527b93b1f9ff44e41",
+   "xyz_sha256": "0c1560e2c6a0a5a774467b7de95d466139eeab044bb362f7e469883e4aa91dc1"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0049",
+   "camera": "left",
+   "frames": 150,
+   "crops_sha256": "c68e7cf56f988715d978278fd52d9c1e96b46cd1c61db2c44e0fc4668109eeeb",
+   "xyz_sha256": "bb6ae9148141ee6165253f34f1677e4b7df931376a2fc01069acd18d4889b3af"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0052",
+   "camera": "right",
+   "frames": 341,
+   "crops_sha256": "e51a3cba5004e04f31bfc523f5c68872b8907f65b962abf28bf9882fa73fa63a",
+   "xyz_sha256": "6803c9c3cd65860887d1dd9c341b4112f5fcfc9a8291439f0eebccf806f34ca4"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0053",
+   "camera": "mid",
+   "frames": 308,
+   "crops_sha256": "06573f1d28e3fe3a7fac29dadf14627b500ef79bc0af356bd3d26cbb82419513",
+   "xyz_sha256": "1e9e4a179acebbacf91ce54694a94dd3cd9a44967cf9fed65e3c0b2e9304e000"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0058",
+   "camera": "left",
+   "frames": 153,
+   "crops_sha256": "6bebc08b156280bd2510af2c6429bc36de9b3ebe047dbb56564febe789c64023",
+   "xyz_sha256": "bc4791552919ad5f2a60e8b51140ce3dd550f8d838cd719ec8a7e53c5f673981"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0059",
+   "camera": "mid",
+   "frames": 170,
+   "crops_sha256": "d9bf6e50a4f5319d5c5f4746caea98b9d488a061c28dca279dbe27cc8c277ac9",
+   "xyz_sha256": "8eff7b2e2dead74964c9bb6048eb595536c4ab0551547137d009333fc3bbbc58"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0062",
+   "camera": "right",
+   "frames": 165,
+   "crops_sha256": "7e33090cefb4cbdd19e5e37da8400f46e5f9f5288fb2ab3b698ec3049c5fdc1f",
+   "xyz_sha256": "026f2206b77ee8f63d278099b83f3a26e9ebfaf6f471f6090684fca5d662e30e"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0068",
+   "camera": "mid",
+   "frames": 147,
+   "crops_sha256": "411d849b7627de7e531c9b158a5afdb3a69affbdf6e15b99d343fe24c7ca3f86",
+   "xyz_sha256": "ed69ed6c0221ea84361f9118e6be95da98ddd2a489959c747d674a86a293cfaa"
+  },
+  {
+   "actor": "4448",
+   "recording": "4448-0071",
+   "camera": "left",
+   "frames": 343,
+   "crops_sha256": "52a877b2a21a077e52592a7202e3cb17f0054a66e476ffbc9054483b18fc8d11",
+   "xyz_sha256": "a8d68f837ddb6081414db7915cf50c997d372a61f701c9fd3004192751056a4a"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0006",
+   "camera": "left",
+   "frames": 175,
+   "crops_sha256": "9e252cf464f0ce0d12c1eb92527900d83a8a6acdf62ee4d164f0d3d6d9d7be30",
+   "xyz_sha256": "b6e8056edd830c66a4789be5f0fe699b0ebe8460dcbb53d150274d3281f6a2a7"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0007",
+   "camera": "right",
+   "frames": 670,
+   "crops_sha256": "1e8ee70fc13d0368dbe7a3186b81e861397ba96b5b142e5ba1e14e4e8eae4e9b",
+   "xyz_sha256": "5c6224b5ba824063d6ee6a1d47af51a167747da1a3d8627b26749f2bea1c7ef2"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0008",
+   "camera": "mid",
+   "frames": 277,
+   "crops_sha256": "e4645fe24ad3a4bb8fbdd2e4ac34d1314da3ee5240e5df74bab50d0902637d87",
+   "xyz_sha256": "678c9cac4b54f1805552cfdf3394c9d61fdd4172c44263376a9274ac8e97469d"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0011",
+   "camera": "right",
+   "frames": 439,
+   "crops_sha256": "3bad2ec046c633768542ddc5331332e6ac58faff54ea9a80407549eedff18c2b",
+   "xyz_sha256": "f17c3c620f41cce50d3ec91dea900496378825cc5533eeae29cd249013aa10d6"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0018",
+   "camera": "right",
+   "frames": 74,
+   "crops_sha256": "a10ff8c31618d40d074a0eab031bf607f9574496c455f3c5cbfafb06adc9952d",
+   "xyz_sha256": "617c598ce979d0b5b07b30641805f925566cbd4345a4e8f62d085e861eff1cbc"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0021",
+   "camera": "left",
+   "frames": 340,
+   "crops_sha256": "114892fff43b58916a878fddeab5b02557b7d4709ee3b7e488a3087509ef344d",
+   "xyz_sha256": "c4d335d3ad5193b54734a38fc8f8add7cb7331d23f98584cb79727cc78f9428c"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0023",
+   "camera": "mid",
+   "frames": 181,
+   "crops_sha256": "095612544d34d43bd259383742864eee8a49f6f4032e83e8b0b99e9158aef03f",
+   "xyz_sha256": "5b7adbda6dabff679a7fd1356098f92115e1c49299488b167ffb3e8c318b0fa3"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0026",
+   "camera": "right",
+   "frames": 473,
+   "crops_sha256": "38c7527035d9edda33cd8dfec12fde7f8649f891f16a78568b1d9882b79c96a9",
+   "xyz_sha256": "d2038638e7181b5978082e8d9b85b69f597fe42307d0a175443678076e70d363"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0027",
+   "camera": "left",
+   "frames": 314,
+   "crops_sha256": "d83f6a3298ba1a776eeeb8a744c6030a4524bb7d4cf5861102cac824d6513991",
+   "xyz_sha256": "40ceec24e2578579c3ed811a749ca86e3d5374c9508bb94028b9d343bca8c1cd"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0032",
+   "camera": "mid",
+   "frames": 120,
+   "crops_sha256": "3336767ffc59b4b25b8f343a9b563c3036db904c5caa8ae2568fd4014ed30c6b",
+   "xyz_sha256": "f984b0d151021ba54ff8c515ed587ed92be05c5f98acff5daa321f97dfe782fb"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0038",
+   "camera": "mid",
+   "frames": 118,
+   "crops_sha256": "1ee42b834a912e768dc281b566f1a3b630a61ffa8290c6480b25e74af553886d",
+   "xyz_sha256": "be22a5f5688110e0a3d1728af21990af779242cc882d332cabf176bc2c6a356e"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0042",
+   "camera": "left",
+   "frames": 240,
+   "crops_sha256": "48b79742324ee6a01f801df01bee3c2b23851fd445bfadee056ac462ce426103",
+   "xyz_sha256": "b72ff83d8611e7901e17b4e6c15a0ccb63c06fe8c0bca278224cc6567507f404"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0050",
+   "camera": "mid",
+   "frames": 282,
+   "crops_sha256": "dee5b5d68e89b27bba328eef5cab63a626b260b707b4b32eb8fd7ecd05206954",
+   "xyz_sha256": "d6df39421137088b01c09a376dbc6940d41fbdb66d948938f79e00a670054bac"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0053",
+   "camera": "right",
+   "frames": 199,
+   "crops_sha256": "b8caab2571ece4696aba1c2dd50900d71508e796c322ef132c1696de34198c60",
+   "xyz_sha256": "ab34127c88f885620308da137daf32722a26a49ac667dcd2c84a038f4690e2ba"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0059",
+   "camera": "right",
+   "frames": 229,
+   "crops_sha256": "b0d4819468b4b94a73df831a12f766e15b3b38eca7377258897707cdd475cdc1",
+   "xyz_sha256": "4c7942178c3ed9d20e0b0538db1392f3cd50b3aa5a117092fd14e9fe3f290b93"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0062",
+   "camera": "mid",
+   "frames": 154,
+   "crops_sha256": "23eb71dab4c62ca720e43ece85473c94211d066b1c5f4f4ab831c6829483d7fe",
+   "xyz_sha256": "60fd7561b859679b781288d62fa0b02abd4d2732ac574027f63bde72480e59af"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0067",
+   "camera": "left",
+   "frames": 114,
+   "crops_sha256": "595b826a12270438c2b13e9852f1cba525c2fb76b0b71bb9ae3f75e4d9457dd7",
+   "xyz_sha256": "45e99ae3faee3a19c50cdec4cac4defb0b6ab3cdc0f9bb2362994aa0a846e831"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0068",
+   "camera": "mid",
+   "frames": 261,
+   "crops_sha256": "fa8d1f99f0801b23ad515460c13c591acff12eddeb41a8120eb8a8d6e8d831c1",
+   "xyz_sha256": "4f06fc7837523d587d3ba0bf0abf3ffbc0f094844a12684b2c215de40efd9af5"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0069",
+   "camera": "mid",
+   "frames": 229,
+   "crops_sha256": "66dd8503adeda4357606e709e995087b93c820ee760190eacf0441c99b6814f4",
+   "xyz_sha256": "6ff6b92bffb77e0fd4c307e2c255b865f340f28fd42c0a40a8e5675f7557682a"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0070",
+   "camera": "left",
+   "frames": 317,
+   "crops_sha256": "1d577318785c422c09af0539bf5d11e3d392f26b23399a635eece6eb4813b648",
+   "xyz_sha256": "b11dad2057e495cdba4ac75bd5887a9a059898375eddd252cf6ae0f90629d6ee"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0077",
+   "camera": "left",
+   "frames": 134,
+   "crops_sha256": "bf4c534e9d9d30d192ac403f768718f5655ddf7be4f9d4d76fbfc13dcf6169b2",
+   "xyz_sha256": "3f20c6b9c98209267017e78eb47d9f22ff9502e5803447c97623bd02eb230d5a"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0078",
+   "camera": "left",
+   "frames": 187,
+   "crops_sha256": "393523305f2b8e6b927e03e9811c81b137ebd36d950a37cdf06638e463bb4694",
+   "xyz_sha256": "52d934f5b314dce53a03b0e1e7d88b84d3a4f22c01e52171e7e6e99c9cb196ba"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0079",
+   "camera": "mid",
+   "frames": 132,
+   "crops_sha256": "bf0966a6d352bf5fafced49e999b8d25fcf51b5e54a03fb010b51eb5eef848cd",
+   "xyz_sha256": "dbd52868178b7d9c537749568cf61b4bc9c21bcc4a560c9ff622ce1c184e4201"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0080",
+   "camera": "mid",
+   "frames": 170,
+   "crops_sha256": "873fef9e723b89072e298a37fef30922b8eeb5c845ad85170ee856220d576646",
+   "xyz_sha256": "66843f69c335c800e44a44fc6c5d03aa727345b5ebb8c03c99246dd105dd0fd9"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0084",
+   "camera": "left",
+   "frames": 167,
+   "crops_sha256": "f72e18f63e907793ce80dce0fb3088ba234593ffa803500a5987c0f1ca5a1116",
+   "xyz_sha256": "8686b89bda57163bcc4d6adcb316b7301e516f73f286010c9d23040de971ceba"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0088",
+   "camera": "left",
+   "frames": 162,
+   "crops_sha256": "a9510bff5f2b42cb724a914f92b3861b46c3b8a0217c192098d49a11fa52a88b",
+   "xyz_sha256": "cd38574c6f1098e74c7d9727b0ac246058860d1ce80a9368f746cb373eab985d"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0092",
+   "camera": "right",
+   "frames": 204,
+   "crops_sha256": "b91a390f3d8caa607a85549dc01e0310aa53a3f67811ed91177a4f5742ef4020",
+   "xyz_sha256": "9bcf0c49f74bcb9fc76e9dd4bbeaf092dfa8faa4c25fb4e195d3e412ecae8275"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0095",
+   "camera": "right",
+   "frames": 280,
+   "crops_sha256": "8760ffb6a5e54f2b2b957cf658d5b76428f1a8ad044c21cbaa0ac81da9da7b2e",
+   "xyz_sha256": "5553ad57aca14c662651340c2c3bd42bea01f1674a65d117fc6083a5988b1fe3"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0098",
+   "camera": "right",
+   "frames": 151,
+   "crops_sha256": "d6913a88ad35babcd9604f899e6ee209b2ded6ea1d8897401810ceb3dd132339",
+   "xyz_sha256": "d4c858d5d2a6c7acce8826650440236c74f8e5799d1c411f7c36ad91373db1fb"
+  },
+  {
+   "actor": "7b5d",
+   "recording": "7b5d-0102",
+   "camera": "right",
+   "frames": 165,
+   "crops_sha256": "5b3d72c84cf54f9504eb0a97b3f417811e4ee52befe95d99691cf9d950abc58f",
+   "xyz_sha256": "e41c293da1d332be7c94bb0657fb40e9447672dcd3e3e4580958116ad06373e0"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0001",
+   "camera": "mid",
+   "frames": 259,
+   "crops_sha256": "d5aed56f87f54b1e1e858b34fd1ccf8754846182f1ed313dfc633ebfd3f1a679",
+   "xyz_sha256": "74704a358481aafd915de405b99c353aa3d4cb3e35a11e75dd04cdae3c7e43f0"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0004",
+   "camera": "right",
+   "frames": 207,
+   "crops_sha256": "645167ac62085c59d2b1a700dc776a0b9b616e2a34b457e7cce9c345f59c7384",
+   "xyz_sha256": "8abe42706ecab615b253854263085f05557d08761843cad9e8b8774bf0c74e3a"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0005",
+   "camera": "right",
+   "frames": 505,
+   "crops_sha256": "ffa0895708519c187028d8a10ee436a4432e949265c9a88216da31a869d12f5e",
+   "xyz_sha256": "f07756bfc4cc54dca66881f1b910cc2b4ca305dee19f5fc131280e8dc1aba216"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0006",
+   "camera": "left",
+   "frames": 261,
+   "crops_sha256": "2ec0ae160cfd05dbbb933cc3226bff0e16de4bc7659819e9a4bc4038fb34f59f",
+   "xyz_sha256": "e71b62e4bfd7f27b4d3b2d257816769dc50679a6609f7784eff7ccc307d19d9c"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0008",
+   "camera": "right",
+   "frames": 200,
+   "crops_sha256": "f35b8ba17d303e21f855444a93a601717449348ff6f4ded29751d1c02256e6c5",
+   "xyz_sha256": "e6ce82b6692356da7217e12a98cd2ce948c40591937046ffc64284e85aada012"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0010",
+   "camera": "mid",
+   "frames": 555,
+   "crops_sha256": "ef793fe82c20905148d60e15643fd5978869d3634a50ecf4b93c073776bf56f5",
+   "xyz_sha256": "74a3400278933ab72a2deda3d01acc26f3774acffbba6259450fdbe83ed5b352"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0011",
+   "camera": "left",
+   "frames": 160,
+   "crops_sha256": "0b3d74d919ebfcae7c5004d9f4429ca9843d1e14f6007b264e8e869daeb34f74",
+   "xyz_sha256": "1f2302670a52e3e070da27c80cb4f81fc253274fd33b4f312a1d9405ecb4c1ad"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0013",
+   "camera": "right",
+   "frames": 307,
+   "crops_sha256": "70b68f15b6d6a2a195a0e4ad593490ef2e17c2d57abf5e426f345974e90a9d3c",
+   "xyz_sha256": "551d60e7520081a6d97e799f6284732056bda0a73193129bd5a55b4fdadf6a7a"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0018",
+   "camera": "mid",
+   "frames": 163,
+   "crops_sha256": "b98298384a8af366905ef91b5ebe4407bb52835b07886ef3a0fc6b1f2938a75f",
+   "xyz_sha256": "742193a1c6d8307e8f017ffd6e2120a22e235a3f91d91b29d6344e26c9006496"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0021",
+   "camera": "left",
+   "frames": 423,
+   "crops_sha256": "02ce9a291b616076f4dbcdd43a2135fcdd71b69b7bc4d9c28fc62a7bce3419c7",
+   "xyz_sha256": "1e81682e624c920e66539328c5a4ffee76a067d34041ccddc099dc124bcfb15c"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0025",
+   "camera": "right",
+   "frames": 100,
+   "crops_sha256": "e1ba830aa0a7b8f0c0a88339cec233d845a2ff272d5d3e3d5fd9d94d307e2831",
+   "xyz_sha256": "192894f6a8652d77e70f1dcc7ba1238c713c103dc3a14e9a98a06a3c09b4a251"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0026",
+   "camera": "left",
+   "frames": 86,
+   "crops_sha256": "f21e98b65b50b2d937b08e8c5f491321901930aa78004dd9177cee60713bba0f",
+   "xyz_sha256": "fa0bc13fb81a1be8b4d556ea4f66d9e54fc1c4038ee2380bee0b0eee8ed5258b"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0032",
+   "camera": "right",
+   "frames": 81,
+   "crops_sha256": "d41e12a71806e8341d57c07ddbf5d563472f97164ef064140b73f99672bdf904",
+   "xyz_sha256": "50d465eb7681173a8ad51261bf47609a5df2a71225124555afd06db00628e83e"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0035",
+   "camera": "mid",
+   "frames": 122,
+   "crops_sha256": "4591c5c35592eb99594f21b5def6908477a1f6a682893d20ea50367b600589d3",
+   "xyz_sha256": "2d533b1915f42cc1859b9426df2ebbc4c9017a1b281143c9c4727b5823379ab0"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0040",
+   "camera": "right",
+   "frames": 212,
+   "crops_sha256": "ca7f586e33d3e6e9ba9a8207af02bb71d7e44b8ec1933a51c00b486b13ff5737",
+   "xyz_sha256": "87750559e353166a7a9c8aac7aab9bffa0b7e820a9df224d549c6150c94a3334"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0041",
+   "camera": "mid",
+   "frames": 90,
+   "crops_sha256": "35d7889ea6b6168e00e8968feded2eaa5fa3449e7b60b86080d847d4d0b612ac",
+   "xyz_sha256": "7c6a440d5326547f2234276edeadc2c1a42dbcc0aac35ada52a318bb3b4ab8d6"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0042",
+   "camera": "mid",
+   "frames": 88,
+   "crops_sha256": "2253706f06a4eb196bb15c7e49e40511713b8cc9b816fa920b0a14ae068d0f8c",
+   "xyz_sha256": "e22a27ee5c2f6276663371e8f0549f922035094338ad0ea71aaf89c3fadc84d7"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0046",
+   "camera": "mid",
+   "frames": 115,
+   "crops_sha256": "11155c0abb32365864bae62a8f462c5d908d00d4cbfdd1a08a0861b5b93f3110",
+   "xyz_sha256": "d69b91041a6d1f98677f6aa0f558b9fe39597c05851309be8689000947977d92"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0048",
+   "camera": "mid",
+   "frames": 81,
+   "crops_sha256": "14ff959e2fc3ad6b64f9e739d1c68d3eb14201dc62b8f06dda3ea04a77d35132",
+   "xyz_sha256": "4237f54296fa7cf254d26df59d55e45271adc17301b9c5c4a66472dad0f857a3"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0050",
+   "camera": "left",
+   "frames": 158,
+   "crops_sha256": "b4ed783694b308434c0cc796c13d335f0a8ddd6264040cbaad377ad73cad9562",
+   "xyz_sha256": "d116f51200cad3da34fc2a7cfda4162b12d77cfe0d543a8bc12883db31999c66"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0059",
+   "camera": "mid",
+   "frames": 100,
+   "crops_sha256": "3d44597e687fdfc04bc629515b8d8ff1972cedc8a54de79a6b36edf817969a59",
+   "xyz_sha256": "d46c6eb32ee6c482de9804051feae3480f32b27c9298dbd61430c067f3615718"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0062",
+   "camera": "left",
+   "frames": 169,
+   "crops_sha256": "9e98653da060dd18972ac25229008d70b5f24012c60f22564e3010b962aadea1",
+   "xyz_sha256": "717dc07df908471b2413c45408bec9fcc7fc38c7571a8e96979521cf7d0e3a0b"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0066",
+   "camera": "right",
+   "frames": 143,
+   "crops_sha256": "0a97129821b258253f03f698ea588ecc3bdce14fdb9a478919833287f224c3de",
+   "xyz_sha256": "a0dd73160041e7fee704244695b2e93dbe801cb20dbc87fa1bd400683cc66647"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0069",
+   "camera": "right",
+   "frames": 124,
+   "crops_sha256": "822639dd1d152757f17f81f854513e43a2938dba14975ceac26bbd87eac9efba",
+   "xyz_sha256": "202c4208a613543f5750a4b727f3eb38acc165536e660336e73424161a49b99a"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0073",
+   "camera": "right",
+   "frames": 222,
+   "crops_sha256": "ee06d96cc74aa1651fd95e8670086e70eb99acee97a6c9990758065f47dd1dfb",
+   "xyz_sha256": "b8680e58040705c08ad319511e5a32732177fd6e62b0f19a0be6d6e3da62e533"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0076",
+   "camera": "left",
+   "frames": 144,
+   "crops_sha256": "6dccece40b57c20299822bb6172d95fcdcb71088b7c77107a054baddf2753b1e",
+   "xyz_sha256": "c0ac643fabdfd2eb9cf9df9e296d402ebb47976f880d25fb9fd9566326c94591"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0080",
+   "camera": "left",
+   "frames": 170,
+   "crops_sha256": "7f8d76836339b2cd2623c5240c9b2fccf189ed9667f7c28b9a4c91a5d2edea04",
+   "xyz_sha256": "0e701238efef0b0ee36dada7071ff86a1d7305c816caf47c609da549d8488e86"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0083",
+   "camera": "left",
+   "frames": 167,
+   "crops_sha256": "c1116931fe4fdb09ce37fb52f7ef6dabc8b7cea5a71516a0cdc1b8dbca877148",
+   "xyz_sha256": "cfb7d1ebc2b17eecb81abaee836763ce37b4a902381dbd8730eb794baba152aa"
+  },
+  {
+   "actor": "b3c1",
+   "recording": "b3c1-0087",
+   "camera": "left",
+   "frames": 143,
+   "crops_sha256": "da54471f457a9a8c820327290520d44612e086879a2fc2798e63c8f5bc1d59d1",
+   "xyz_sha256": "1ede41f4d03a92f5f34e10b9d84995bd12f5923b770e5fcb0fda4c095ce8a66a"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0001",
+   "camera": "left",
+   "frames": 216,
+   "crops_sha256": "ae6c847de0773f802b003afa67814602fc733a095ab774b204b0ded42edbb883",
+   "xyz_sha256": "d0b70061a5657c45024742f2142695796f04a8b553d6714f73d106d80c70d848"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0006",
+   "camera": "left",
+   "frames": 223,
+   "crops_sha256": "07c9b7b086408da3e70fc796e3005ff1ec48d55474872af10554a01dbd3d9e41",
+   "xyz_sha256": "bda0c0b5da0510cd78f62eeb7a9c5fd7088bb425c154c536955bc836cea9ae78"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0008",
+   "camera": "right",
+   "frames": 268,
+   "crops_sha256": "f5a5ec6664d37ea43ee37c34d0fd215059ac8d4bc7e41539eae5b3847c5b7f79",
+   "xyz_sha256": "e53387850cd50a2b6a43652ffbcd2a2039c55090a2ca7471446a0a7a0ad8032f"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0009",
+   "camera": "mid",
+   "frames": 262,
+   "crops_sha256": "95de030f1abc806a1f6a3a7afe883e0a9bb4a404926c4f5f7268141abf2306d9",
+   "xyz_sha256": "0d34f7ce1f56fff97597a31a1a24fd7bb7780a80e33d61b0850b5589e0ed0209"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0011",
+   "camera": "mid",
+   "frames": 243,
+   "crops_sha256": "8cff29a5d1cc22878894510b1a770de40ff574c9ea67df7a22d99354f8fdaf82",
+   "xyz_sha256": "72d7c7424e57a7566b9ad3853f1ce0ea99ae220363a89dad3d555c77fb835378"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0013",
+   "camera": "left",
+   "frames": 317,
+   "crops_sha256": "34960da33928fa14b9ed20d04d80257dfde9418c715e3eaf3a745b4bb561f51a",
+   "xyz_sha256": "457b0ce919a07cc98228ed1a156cf0006f47b84ce084795f53dc263dcdde02f0"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0015",
+   "camera": "left",
+   "frames": 359,
+   "crops_sha256": "545423278f09a3cb038fdb4e28dda252dcaa212b28f3578ec8f6921de7a4f4ec",
+   "xyz_sha256": "d17d404bfc4b8370215c051deffd7c7c4589f29b4e65080af614bf19493f1709"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0017",
+   "camera": "mid",
+   "frames": 206,
+   "crops_sha256": "618cdc2cae939ae7bcf4129a1897b4054cd93d434e4ce5212ae90d6ee2d1204f",
+   "xyz_sha256": "1d72fc941f050522fcf37b696df946d268142809cc191f76e0f733e17cea3374"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0020",
+   "camera": "left",
+   "frames": 89,
+   "crops_sha256": "2e2c86ab304681ad15afb98d4a92b67ad33ed96962d92219af9caba854053c3e",
+   "xyz_sha256": "f8288887970ae9998925ff15e5c830f9998171cca44150bc5489b5dd1db88011"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0021",
+   "camera": "mid",
+   "frames": 169,
+   "crops_sha256": "c3141913cfe4d25f3b34b94f913420926799082b483b9806017f062cbb492106",
+   "xyz_sha256": "6bb02dcaef218d2e33d0e10933e095f503f334059216e6c731c30968a284cb0e"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0025",
+   "camera": "right",
+   "frames": 79,
+   "crops_sha256": "5f9945b66e923a4816d96f582d53e48bd23e6663f2bb1e8e152cb633ebd64f0a",
+   "xyz_sha256": "a19fe7168b55aef3dc48b875524470ccbea9d1ef55b9f68ad32290ced83981c3"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0026",
+   "camera": "mid",
+   "frames": 130,
+   "crops_sha256": "2904e0c44212b00076fb5b7fae9e9aeef37a5b38f4104bbd69090646fa5729b3",
+   "xyz_sha256": "c8c59656c72dcde937cda29755e1790488afec6e7b38957ffdda7dc036e4945c"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0031",
+   "camera": "right",
+   "frames": 195,
+   "crops_sha256": "22713fb5dbb43629aec512ec57b55b33453f7c46f60140ab1b03c6ea290fd81a",
+   "xyz_sha256": "28d5255fda3b7b468a009f6e7670a0045baccb544ea9e52d3879d54a0cff5fba"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0032",
+   "camera": "right",
+   "frames": 122,
+   "crops_sha256": "e64b65bf7339c70f1896f83e0a7ca925f98faf6f4e9da6f7d56cec32d96d7bea",
+   "xyz_sha256": "693ebd8b5747998255028dc2d77142be9d060d577d97849aca306706368fffe5"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0040",
+   "camera": "left",
+   "frames": 92,
+   "crops_sha256": "23009350122a87b0653fee1e51b32001eae918ed69e574396ad2046cc20e0625",
+   "xyz_sha256": "52b5a7f1d448ec1914799ce49742534aebb8deed073a8c2491eb86e8ebd6c20e"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0046",
+   "camera": "right",
+   "frames": 201,
+   "crops_sha256": "4dae5ce67041034da62a3b34c11733bb9a8d2e25c4fedd897f6287e89e7f98ad",
+   "xyz_sha256": "4ab20767e42e8de9f6d687e1a0b08d13d42b24e7a6a8a6eb2487e07a487c9884"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0052",
+   "camera": "mid",
+   "frames": 123,
+   "crops_sha256": "71d0af62fd27ea061fd01b72228adc790ede9754847f57dbd33f7c869fdb5823",
+   "xyz_sha256": "319a98d4293bff782615e8f422664aa840ace70471f2708b9e3c8e36ca0e1a6b"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0053",
+   "camera": "right",
+   "frames": 83,
+   "crops_sha256": "d5ca8881d218e13d660759c60bd457ee3db209ec43255716e2f1fadf3797dd71",
+   "xyz_sha256": "21556daa12fec569560f8861093802bf046d3c6bda483d97c223f5cd260a03db"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0054",
+   "camera": "left",
+   "frames": 127,
+   "crops_sha256": "6beaf5c28da3a4d6bc1213ea3c4286d5bcb10947d7aebf60bc3fbf32aae779f9",
+   "xyz_sha256": "a6e36ebc32b042234394e2a55835eefe14491a0f86a66fcbb806615e39e62bc7"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0058",
+   "camera": "left",
+   "frames": 96,
+   "crops_sha256": "e84d3dc191152c5e53e5da4633c928abe9fc12ac04bc25f77225c5195cf0e7a5",
+   "xyz_sha256": "dc40ba84a1f147e6a9c689bbfad94c86ebb0be32b652c398cd5114271581f34a"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0059",
+   "camera": "left",
+   "frames": 157,
+   "crops_sha256": "495fb1adc5d296cd1ed1a0b9b679e3d766fb9e200dd402e15d1343df3e5a0453",
+   "xyz_sha256": "cde9cf1357cd148d29c60e5ced9595d31660c6ca5f580f7e124dea27a5c11ad8"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0068",
+   "camera": "right",
+   "frames": 85,
+   "crops_sha256": "eae7fc2fbbe954ac1a07d7aba6056c16c251772723acd6ade8fe0e38ddd67b3d",
+   "xyz_sha256": "7a4271aa725f5cafebd24136e16aee340035b994222f1c132db8902213a7568d"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0070",
+   "camera": "mid",
+   "frames": 126,
+   "crops_sha256": "d594303c60075738584c7b81d28cf876dea0574c19efc0ee89545ac6d0ce2c60",
+   "xyz_sha256": "3894a9ef2238512aab006dcb82842683b9cb25dd8c0d5a072fe218c9db4c04ea"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0072",
+   "camera": "right",
+   "frames": 115,
+   "crops_sha256": "89efe4cf10cddad1adb27164b5b349d92e34409d45889922abb406ea4d1bd311",
+   "xyz_sha256": "ac32ad5557574dcb900e9eee5e4e02af735dbbff700e03f5928e0e39bdd3dcbf"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0074",
+   "camera": "right",
+   "frames": 86,
+   "crops_sha256": "ef6b8d6f49de04678c092367b733e26064ad1b0fd23c5e3cde0cc420958949ca",
+   "xyz_sha256": "0880d772fbe5d3a56c85a33a135841730201e0a79a230f6c199867ce143fef65"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0080",
+   "camera": "right",
+   "frames": 261,
+   "crops_sha256": "6f6571fac10c4148d923f950b0533aa1c9a4bc5f1c0208067493d9b5e4d7aefa",
+   "xyz_sha256": "d6b67e2e9784b77c103f5f796bd9d2ff9a69522078955c3c4127f1e91407e012"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0082",
+   "camera": "mid",
+   "frames": 102,
+   "crops_sha256": "d3f6566d97b6f79ea1821b955381cba16cb0186487197b934f7f2166bdc95144",
+   "xyz_sha256": "0fac57f0b93d24779bfadb6bf220582568e7dd76a7040fcab1aee4cbe46a6e20"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0085",
+   "camera": "mid",
+   "frames": 181,
+   "crops_sha256": "80809604bd8bcf7de9d131c68ed7cf97d75aceefb5b0a4fe602ebc83f3142a6f",
+   "xyz_sha256": "2a23b9efaabdc375c5a2e43ed0633058b6377bffc8548bb12f4cc1b2b0c042bd"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0092",
+   "camera": "mid",
+   "frames": 108,
+   "crops_sha256": "7a54883021598b382caba995f031839378a5ed55689b16edc74822964693a4fb",
+   "xyz_sha256": "978f93e149b215fbc2caa316e326e9e9687d2f2cb588ede4e952c147df874c4b"
+  },
+  {
+   "actor": "d26c",
+   "recording": "d26c-0093",
+   "camera": "left",
+   "frames": 246,
+   "crops_sha256": "427d3c6c3825595bd7486fec6bb97165e9450fa222315080d596ba966215b81f",
+   "xyz_sha256": "bbdd4a39376d5067c5815f73066010f1875cb18790cf155c799f3e124c13bfd4"
+  }
+ ]
+}

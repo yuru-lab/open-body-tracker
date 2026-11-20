@@ -1,10 +1,15 @@
 // open-body-tracker browser demo: YOLOX person detector + 3D pose model, both on ONNX Runtime Web (WebGPU, WASM fallback).
 import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.webgpu.min.mjs';
+import { flipDecode, mirrorBatch } from './flip.js';
 
 // Models come from Hugging Face; when served from localhost, ./models/ is tried first.
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
-// float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB).
-const POSE_MODELS = { f16: 'obt-h3c-fp16.onnx', f32: 'obt-h3c.onnx' };
+// float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB). See docs/MODELS.md.
+const POSE_MODELS = {
+  v2: { f16: 'obt-body-v2-fp16.onnx', f32: 'obt-body-v2.onnx' },
+  v1: { f16: 'obt-body-v1-fp16.onnx', f32: 'obt-body-v1.onnx' },
+};
+
 const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416;
 const HIPS = [11, 12];
 // Joint 23 is drawn only: the neck, midway between the shoulders.
@@ -18,9 +23,9 @@ const $ = (id) => document.getElementById(id);
 const status = (text) => { $('status').textContent = text; };
 const video = $('video');
 // Live settings (read every frame), remembered in this browser.
-const SETTINGS = ['detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'view'];
+const SETTINGS = ['model', 'flip', 'detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'view'];
 const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
-let backend = null, pose = null, detector = null, detectorName = null, running = false;
+let backend = null, pose = null, poseName = null, f16 = false, detector = null, detectorName = null, running = false;
 
 // ------------------------------------------------------------ model loading
 
@@ -108,14 +113,24 @@ async function estimate(box) {
   const rgba = cropCtx.getImageData(0, 0, CROP_W, CROP_H).data, plane = CROP_W * CROP_H;
   const input = new Float32Array(3 * plane);
   for (let i = 0; i < plane; i++) { input[i] = rgba[i * 4]; input[plane + i] = rgba[i * 4 + 1]; input[2 * plane + i] = rgba[i * 4 + 2]; }
-  const out = await pose.run({ crop: new ort.Tensor('float32', input, [1, 3, CROP_H, CROP_W]) });
-  const xy = [], xyz = [], score = Array.from(out.score.data), s = w / CROP_W;
+  const out = setting('flip') === 'on' ? await flipTest(input, plane) : await plain(input);
+  const xy = [], xyz = [], score = Array.from(out.score), s = w / CROP_W;
   for (let k = 0; k < 23; k++) {
-    xy.push([sx + out.xy.data[k * 2] * s, sy + out.xy.data[k * 2 + 1] * s]);
-    xyz.push([out.xyz.data[k * 3], out.xyz.data[k * 3 + 1], out.xyz.data[k * 3 + 2]]);
+    xy.push([sx + out.xy[k * 2] * s, sy + out.xy[k * 2 + 1] * s]);
+    xyz.push([out.xyz[k * 3], out.xyz[k * 3 + 1], out.xyz[k * 3 + 2]]);
   }
   const root = [0, 1, 2].map((i) => (xyz[HIPS[0]][i] + xyz[HIPS[1]][i]) / 2);
   return { box, xy, score, xyz: xyz.map((p) => p.map((v, i) => v - root[i])) };
+}
+
+async function plain(input) {
+  const out = await pose.run({ crop: new ort.Tensor('float32', input, [1, 3, CROP_H, CROP_W]) });
+  return { xy: out.xy.data, score: out.score.data, xyz: out.xyz.data };
+}
+
+// Flip test: the crop and its mirror in one batch, classifier outputs averaged (web/flip.js). About 2x slower.
+async function flipTest(input, plane) {
+  return flipDecode(await pose.run({ crop: new ort.Tensor('float32', mirrorBatch(input, plane, CROP_W, CROP_H), [2, 3, CROP_H, CROP_W]) }));
 }
 
 // Box from the previous pose: confident points (at least 8), 15% margin per side.
@@ -264,8 +279,10 @@ async function start() {
   if (!backend) {
     const adapter = navigator.gpu && await navigator.gpu.requestAdapter().catch(() => null);
     backend = adapter ? 'webgpu' : 'wasm';
-    pose = await session(adapter?.features.has('shader-f16') ? POSE_MODELS.f16 : POSE_MODELS.f32);
+    f16 = Boolean(adapter?.features.has('shader-f16'));
   }
+  const wanted = POSE_MODELS[$('model').value][f16 ? 'f16' : 'f32'];
+  if (poseName !== wanted) { pose = await session(wanted); poseName = wanted; }
   if (detectorName !== $('detector').value) { detector = await session($('detector').value); detectorName = $('detector').value; }
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { deviceId: cameraChoice ? { exact: cameraChoice } : undefined, width: 640, height: 480 }, audio: false });
@@ -340,4 +357,6 @@ $('controls').addEventListener('submit', (e) => {
   e.preventDefault();
   if (running) stop(); else start().catch((error) => stop(`Error: ${error.message}`));
 });
-$('detector').addEventListener('change', () => { if (running) start().catch((error) => stop(`Error: ${error.message}`)); });
+for (const id of ['detector', 'model']) {
+  $(id).addEventListener('change', () => { if (running) start().catch((error) => stop(`Error: ${error.message}`)); });
+}

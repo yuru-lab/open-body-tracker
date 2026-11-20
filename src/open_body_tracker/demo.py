@@ -3,6 +3,7 @@
     uv run obt-demo                      # webcam 0, YOLOX-nano, CPU
     uv run obt-demo --detector tiny --gpu
     uv run obt-demo --image person.jpg   # writes person.pose.jpg
+    uv run obt-demo --model-version v1   # the previous model; --flip for the flip test (about 2x slower)
 """
 import argparse
 import math
@@ -13,7 +14,7 @@ import cv2
 import numpy as np
 
 from .detector import PersonDetector
-from .hub import fetch
+from .hub import DEFAULT_MODEL, MODELS, fetch, model_file
 from .keypoints import EDGES
 from .pipeline import PosePipeline
 
@@ -53,12 +54,16 @@ def main():
     parser.add_argument("--detector", choices=["nano", "tiny"], default="nano")
     parser.add_argument("--gpu", action="store_true", help="run the pose model with CUDA (needs onnxruntime-gpu)")
     parser.add_argument("--no-track", action="store_true", help="run the detector on every frame")
-    parser.add_argument("--model", type=Path, help="pose model ONNX (default: download obt-h3c.onnx)")
+    parser.add_argument("--model-version", choices=sorted(MODELS), default=DEFAULT_MODEL,
+                        help=f"pose model to download (default {DEFAULT_MODEL}; see docs/MODELS.md)")
+    parser.add_argument("--model", type=Path, help="pose model ONNX file (overrides --model-version)")
+    parser.add_argument("--flip", action="store_true", help="flip test: a little more accurate and steadier, about 2x slower")
     args = parser.parse_args()
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if args.gpu else ["CPUExecutionProvider"]
     detector = PersonDetector(fetch(f"yolox_{args.detector}.onnx"))
-    pipeline = PosePipeline(args.model or fetch("obt-h3c.onnx"), detector, providers, track=not args.no_track and not args.image)
+    pipeline = PosePipeline(args.model or fetch(model_file(args.model_version)), detector, providers,
+                            track=not args.no_track and not args.image, flip=args.flip)
 
     if args.image:
         frame = cv2.imread(str(args.image))

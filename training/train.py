@@ -1,14 +1,17 @@
-"""Train obt-h3c in two stages.
+"""Train the obt-body models in two stages.
 
     # stage 1: 2D, 17 COCO points, from DINOv2 ViT-B/14 (about 11 h on an RTX 3060 Ti)
     uv run --extra train python training/train.py --stage 2d --out runs/stage1
     # stage 2: adds 6 foot points and metric 3D (about 4 h)
     uv run --extra train python training/train.py --stage 3d --init runs/stage1/final.pt --out runs/stage2
+    # obt-body-v2: the same stage 2 plus ASPset-510 3D (needs training/prepare_aspset.py first)
+    uv run --extra train python training/train.py --stage 3d --aspset --init runs/stage1/final.pt --out runs/stage2-v2
     # release weights
     uv run --extra train python scripts/convert_checkpoint.py runs/stage2/final.pt models/my-model.safetensors
 
 Every update draws 32 crops: 16 ordinary + 4 hard COCO crops (human labels) and 12 Open Images crops (SAM 3D Body
-teacher labels). Sampling and augmentation are keyed by (seed, update), so an interrupted run resumes exactly
+teacher labels); with --aspset, 4 of the 12 teacher crops are replaced by ASPset-510 crops with their multi-view
+3D (body 12 points, no 2D label). Sampling and augmentation are keyed by (seed, update), so an interrupted run resumes exactly
 (--resume). Only the EMA weights of the last update are kept for release; no checkpoint is selected by score.
 """
 import argparse
@@ -36,6 +39,9 @@ DINOV2_URL = "https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_
 DINOV2_SHA256 = "0b8b82f85de91b424aded121c7e1dcc2b7bc6d0adeea651bf73a13307fad8c73"
 FLIP17 = FLIP[:17]
 ANKLE_FOR_FOOT = [15, 15, 15, 16, 16, 16]
+ALL_MASK = np.ones(23, np.float32)
+BODY12_MASK = np.zeros(23, np.float32)
+BODY12_MASK[5:17] = 1
 STAGES = {  # epochs of 471 updates, peak learning rate
     "2d": dict(epochs=90, peak_lr=5e-4),
     "3d": dict(epochs=30, peak_lr=2.5e-4),
@@ -47,7 +53,7 @@ STAGES = {  # epochs of 471 updates, peak learning rate
 class Data:
     """Crops (from prepare_data.py) and labels (from the label release), in label order."""
 
-    def __init__(self, labels, data, stage):
+    def __init__(self, labels, data, stage, aspset=False):
         self.stage = stage
         coco = json.loads((labels / "coco2014.json").read_text())
         self.coco_xy = np.array([c["xy"] for c in coco["crops"]], np.float32)
@@ -59,11 +65,18 @@ class Data:
         self.coco_crops = np.load(data / "coco_crops.npy", mmap_mode="r")
         self.teacher_crops = np.load(data / "teacher_crops.npy", mmap_mode="r")
         assert len(self.coco_crops) == len(self.coco_xy) and len(self.teacher_crops) == len(self.teacher["xy"])
+        self.aspset = None
+        if aspset:  # from training/prepare_aspset.py
+            self.aspset = dict(crops=np.load(data / "aspset_crops.npy", mmap_mode="r"), xyz=np.load(data / "aspset_xyz.npy"))
+            assert len(self.aspset["crops"]) == len(self.aspset["xyz"]) == 43201
         # One reference epoch = all human-labelled crops once (471 updates).
         self.epoch = (len(pools) + 31) // 32
 
     def sample(self, source, index):
         """-> (rgb, xy, valid, xyz or None) before augmentation."""
+        if source == "aspset":  # 3D only: ASPset joint centres are not COCO keypoints, so no 2D label
+            return (np.array(self.aspset["crops"][index]), np.zeros((23, 2), np.float32), np.zeros(23, bool),
+                    self.aspset["xyz"][index].copy())
         if source == "teacher":
             rgb = np.array(self.teacher_crops[index])
             xy, valid, xyz = self.teacher["xy"][index], self.teacher["valid"][index], self.teacher["xyz"][index]
@@ -76,24 +89,29 @@ class Data:
                 np.zeros((23, 3), np.float32))
 
     def batch(self, seed, update):
-        """16 ordinary + 4 hard + 12 teacher crops, keyed by (seed, update)."""
+        """16 ordinary + 4 hard + 12 teacher crops (or 8 teacher + 4 ASPset), keyed by (seed, update)."""
         stream = lambda number: np.random.default_rng(np.random.SeedSequence((seed, update, number)))  # noqa: E731
         slots = (("ordinary", stream(1).integers(len(self.pools["ordinary"]), size=16)),
                  ("hard", stream(2).integers(len(self.pools["hard"]), size=4)),
                  ("teacher", stream(7).integers(len(self.teacher_crops), size=12)))
+        if self.aspset is not None:
+            slots = slots[:2] + (("teacher", slots[2][1][:8]),
+                                 ("aspset", stream(8).integers(len(self.aspset["xyz"]), size=4)))
         augment_seed = int(stream(4).integers(2 ** 32))
         random.seed(augment_seed)
         np.random.seed(augment_seed)
         flip, lower = (FLIP17, list(range(11, 17))) if self.stage == "2d" else (FLIP, list(range(11, 23)))
-        items, has3d = [], []
+        items, has3d, mask3d = [], [], []
         for source, indices in slots:
             for index in indices:
                 rgb, xy, valid, xyz = self.sample(source, int(index))
                 items.append(augment(rgb, xy, valid, flip, lower, xyz))
-                has3d.append(source == "teacher")
+                has3d.append(source in ("teacher", "aspset"))
+                # ASPset labels cover the body 12 points only (a left/right-symmetric set, so flips keep it)
+                mask3d.append(BODY12_MASK if source == "aspset" else ALL_MASK)
         rgb, xy, valid = (np.stack([item[k] for item in items]) for k in range(3))
         xyz = None if self.stage == "2d" else np.stack([item[3] for item in items])
-        return rgb, xy, valid, xyz, np.array(has3d)
+        return rgb, xy, valid, xyz, np.array(has3d), np.stack(mask3d)
 
 
 # ---------------------------------------------------------------- targets and loss (MMPose SimCC / KLDiscretLoss)
@@ -237,7 +255,7 @@ def build_model(stage, init, seed):
 # ---------------------------------------------------------------- training
 
 def train_step(model, ema, optimizer, batch, stage, lr, metric_weight=1.):
-    rgb, xy, valid, xyz, has3d = batch
+    rgb, xy, valid, xyz, has3d, mask3d = batch
     tx, ty, weights = simcc_targets(xy, valid)
     device = next(model.parameters()).device
     tensor = partial(torch.as_tensor, device=device)
@@ -250,7 +268,7 @@ def train_step(model, ema, optimizer, batch, stage, lr, metric_weight=1.):
     loss3d = torch.zeros((), device=device)
     if stage == "3d":
         labels = [tensor(metric_targets(xyz[..., axis])) for axis in range(3)]
-        mask = tensor(np.repeat(has3d.astype(np.float32)[:, None], xyz.shape[1], 1))
+        mask = tensor(has3d.astype(np.float32)[:, None] * mask3d)
         loss3d = kl_loss(outputs[2:], labels, mask)
     loss = loss2d + metric_weight * loss3d
     loss.backward()
@@ -278,9 +296,11 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=21)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--aspset", action="store_true", help="stage 3d: add ASPset-510 3D (obt-body-v2)")
     parser.add_argument("--max-updates", type=int, help="stop early (for a smoke test)")
     args = parser.parse_args()
     assert args.stage == "2d" or args.init, "--stage 3d needs --init"
+    assert not args.aspset or args.stage == "3d", "--aspset is for --stage 3d"
 
     # Deterministic kernels: the same machine and versions give the same run.
     os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
@@ -292,7 +312,7 @@ def main():
     import cv2
     cv2.setNumThreads(1)
 
-    data = Data(args.labels, args.data, args.stage)
+    data = Data(args.labels, args.data, args.stage, args.aspset)
     total = data.epoch * STAGES[args.stage]["epochs"]
     peak = STAGES[args.stage]["peak_lr"]
     minimum = peak / 20

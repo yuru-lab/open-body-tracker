@@ -15,6 +15,18 @@
   </header>
   <form id="controls">
     <label>Camera <select id="camera"><option value="">Default camera</option></select></label>
+    <label title="obt-body-v2 is more accurate in 3D; v1 is the first release. See docs/MODELS.md.">Model
+      <select id="model">
+        <option value="v2" selected>obt-body-v2 (latest)</option>
+        <option value="v1">obt-body-v1</option>
+      </select>
+    </label>
+    <label title="Also runs the mirrored image and averages both: slightly more accurate and steadier, about 2x slower.">Flip test
+      <select id="flip">
+        <option value="off" selected>off</option>
+        <option value="on">on (about 2x slower)</option>
+      </select>
+    </label>
     <label>Person detector
       <select id="detector">
         <option value="yolox_nano.onnx" selected>YOLOX-nano (fast)</option>

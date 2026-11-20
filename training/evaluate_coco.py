@@ -1,6 +1,6 @@
 """COCO val2017 keypoint AP (17 body points) with ground-truth person boxes, as reported in MODEL_CARD.md.
 
-    uv run --extra train python training/evaluate_coco.py --weights models/obt-h3c.safetensors --coco data/coco2017 --download
+    uv run --extra train python training/evaluate_coco.py --weights models/obt-body-v2.safetensors --coco data/coco2017 --download
 
 "clean" excludes the 263 val2017 photos that also appear in the training archives (training/coco_val2017_exclude.json).
 Protocol: every non-crowd person box, 25% margin, 256x192 crop, no flip test; detection score = mean keypoint score.

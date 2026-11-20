@@ -4,6 +4,7 @@ import time
 import numpy as np
 import onnxruntime as ort
 
+from . import flip as flip_test
 from .keypoints import HIPS
 from .preprocess import crop
 from .smoothing import OneEuro
@@ -35,8 +36,11 @@ class BoxTracker:
 
 
 class PosePipeline:
-    def __init__(self, model_path, detector, providers=None, track=True, smoothing=True):
+    def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False):
         self.session = ort.InferenceSession(str(model_path), providers=providers or ["CPUExecutionProvider"])
+        if flip and not set(flip_test.LOGITS) <= {o.name for o in self.session.get_outputs()}:
+            raise ValueError(f"{model_path} has no logit outputs; the flip test needs obt-body-v1/v2 (not obt-h3c.onnx)")
+        self.flip = flip
         self.detector = detector
         self.tracker = BoxTracker() if track else None
         self.filters = dict(xy=OneEuro(0.65, 0.006), xyz=OneEuro(0.65, 0.5)) if smoothing else None
@@ -58,7 +62,11 @@ class PosePipeline:
                     f.reset()
             return None
         patch, inverse = crop(rgb, box)
-        xy, score, xyz = self.session.run(None, {"crop": patch.transpose(2, 0, 1)[None].astype(np.float32)})
+        crops = patch.transpose(2, 0, 1)[None].astype(np.float32)
+        if self.flip:
+            xy, score, xyz = flip_test.run(self.session, crops)
+        else:
+            xy, score, xyz = self.session.run(["xy", "score", "xyz"], {"crop": crops})
         xy = xy[0] @ inverse[:, :2].T + inverse[:, 2]
         score, xyz = score[0], xyz[0] - xyz[0][list(HIPS)].mean(0)
         if self.tracker is not None:

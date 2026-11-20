@@ -10,7 +10,8 @@ download yourself.
 | SAM 3D Body outputs on the Open Images crops | 2D, foot and 3D teacher labels | SAM License (Meta) — released with this project as keypoint files only |
 | DINOv2 ViT-B/14 weights | Backbone initialisation | Apache-2.0 |
 | COCO val2017 | Final 2D evaluation only | as COCO |
-| ASPset-510 | 3D development (2 subjects) and final evaluation (3 held-out subjects) only | CC0 |
+| ASPset-510 | **v2 only:** 3D training on 7 subjects (43,201 frames, `training/prepare_aspset.py`). Both versions: 3D development (2 other subjects) and final evaluation (the 3 official test subjects) | CC0 |
+| Harmony4D (test split, 3 sequences) | Final 3D evaluation only (docs/MODELS.md); never used for training | MIT (dataset card) |
 
 Not used for the released weights: CC BY-SA images, synthetic renders, Human-Art, or any data with
 non-commercial terms.

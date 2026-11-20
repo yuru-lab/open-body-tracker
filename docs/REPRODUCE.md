@@ -1,11 +1,13 @@
-# Reproducing the model
+# Reproducing the models
 
-Everything needed to train `obt-h3c` from public data is in this repository and the label release
+Everything needed to train `obt-body-v1` (released as `obt-h3c`) and `obt-body-v2` from public data is in this repository and the label release
 [`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels).
 SAM 3D Body does **not** need to be run: its outputs are part of the label release.
 
 > **Verified (2026-11-20):** a full re-training run with exactly this code and the published labels, on one
 > RTX 3060 Ti, reproduces the released accuracy within run-to-run noise:
+>
+> Verified for **obt-body-v1**:
 >
 > | | released `obt-h3c` | re-trained |
 > |---|---:|---:|
@@ -66,6 +68,33 @@ How close is the code to the release run? Checked against the original (MMPose-b
 - the losses of the first 10 updates are identical; later updates drift slightly (different PyTorch version), so the
   final weights are not bit-identical and the accuracy is expected to match within run-to-run noise.
 
+## 2b. obt-body-v2: add ASPset-510 3D to stage 2
+
+v2 uses the same stage 1. Its stage 2 replaces 4 of the 12 teacher crops of every update with ASPset-510 (CC0)
+crops and their multi-view 3D (body 12 points, hip-centred, no 2D label; 3D loss weight 1 as for the teacher).
+
+```sh
+uv run python training/prepare_aspset.py --out data     # downloads ~24 GB from the Internet Archive, writes ~6.4 GB
+uv run python training/train.py --stage 3d --aspset --init runs/stage1/final.pt --out runs/stage2-v2   # ~3.7 h
+uv run python scripts/convert_checkpoint.py runs/stage2-v2/final.pt models/my-model-v2.safetensors
+```
+
+`prepare_aspset.py` reads only the 209 recordings listed in `training/aspset_train.json`. These are 7 trainval
+subjects with one camera per recording; one recording fails the bone-length gate and is listed as excluded. The
+script decodes the videos with OpenCV, crops around ASPset's own person boxes, and checks every recording's crops
+and labels against the SHA-256 of the release run. The ASPset subjects of the official test split (the 3D
+benchmark) and two development subjects are not used.
+
+How close is the code to the v2 release run? Checked against the original training code:
+
+- the ASPset crops and 3D labels are bit-identical (all 43,201 frames, OpenCV 5.0.0),
+- the augmented batches are bit-identical, including the 3D mask, at updates 1–10, 500, 1,000, 4,711, 7,065,
+  9,421, 12,000 and the last update, 14,130,
+- from the release run's initial weights, the losses of the first 5 updates are identical.
+
+A full re-training of v2 with this code has not been run yet; as for v1, the final weights are expected to differ
+slightly (PyTorch version) and the accuracy to match within run-to-run noise.
+
 ## 3. Evaluation
 
 ```sh
@@ -73,4 +102,5 @@ uv run python training/evaluate_coco.py --weights models/my-model.safetensors --
 ```
 
 reports COCO val2017 keypoint AP with ground-truth boxes; "clean" excludes the 263 val2017 photos that appear in the
-training archives (`training/coco_val2017_exclude.json`). The released model scores 71.7 (clean) / 72.7 (full).
+training archives (`training/coco_val2017_exclude.json`). v1 scores 71.7 (clean) / 72.7 (full), v2 71.6 / 72.6.
+The 3D benchmarks (ASPset-510 test subjects, Harmony4D) are described in [MODELS.md](MODELS.md).

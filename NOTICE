@@ -2,7 +2,7 @@ open-body-tracker
 Copyright 2026 open-body-tracker contributors
 
 Source code in this repository is licensed under the Apache License 2.0 (LICENSE).
-The model weights (obt-h3c.*) and the teacher labels are distributed under the SAM License
+The model weights (obt-body-v1.*, obt-body-v2.* and obt-h3c.*) and the teacher labels are distributed under the SAM License
 (licenses/SAM-LICENSE.txt); see MODEL_CARD.md.
 
 This product includes or adapts the following third-party work:
@@ -22,5 +22,8 @@ This product includes or adapts the following third-party work:
   create these weights; see licenses/SAM-LICENSE.txt.
 
 * ONNX Runtime (Microsoft), MIT License — loaded by the web demo from a CDN.
+
+* ASPset-510 (A. Nibali et al.), CC0 1.0, https://github.com/anibali/aspset-510
+  obt-body-v2 was additionally trained on ASPset-510 3D joints and video frames.
 
 Training images are NOT included. See DATA.md for the datasets and their licences.
