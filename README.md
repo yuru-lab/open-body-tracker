@@ -1,64 +1,61 @@
-# open-body-tracker
+<p align="right"><b>English</b> · <a href="README.ja.md">日本語</a></p>
 
-[日本語](README.ja.md)
+<h1 align="center">open-body-tracker</h1>
 
-Lightweight full-body **3D pose from a single RGB camera**: 23 keypoints (body + feet) in 2D and in metres,
-for one person, in real time on a consumer GPU or in the browser with WebGPU.
+<p align="center">
+  Full-body 3D pose from one RGB camera: 23 keypoints in 2D and in metres, in real time.<br>
+  <a href="https://yuru-lab.github.io/open-body-tracker/"><b>Browser demo</b></a> ·
+  <a href="https://huggingface.co/Yurup/open-body-tracker">Models</a> ·
+  <a href="docs/MODELS.md">Benchmarks</a>
+</p>
 
-**[Try the browser demo](https://yuru-lab.github.io/open-body-tracker/)**. It runs locally and your video never leaves the device.
+<p align="center"><img src="docs/sample-aspset.gif" alt="2D skeleton on the video and the 3D prediction next to the reference" width="800"></p>
 
-![obt-body-v1 on an ASPset-510 clip: 2D skeleton on the video, 3D prediction next to the reference](docs/sample-aspset.gif)
+<p align="center"><sub>A person never used in training (<a href="https://github.com/anibali/aspset-510">ASPset-510</a>, CC0).
+Grey: reference 3D. Colour: obt-body-v0.3.0, one camera, no smoothing.<br>3D error in this clip 56 mm; 53.7 mm on average.</sub></p>
 
-<sub>A person from [ASPset-510](https://github.com/anibali/aspset-510) (CC0) who was never used in training.
-Grey: ASPset multi-view reference 3D. Colour: obt-body-v1 (the first release), one camera, each frame on its own,
-no smoothing. The clip was chosen by a fixed rule (front camera, error within ±8 mm of the held-out average, most
-varied pose): 64 mm PA-MPJPE here, 67.9 mm on average. Harder poses such as crouching or a back view reach about 86 mm.</sub>
+## Models
 
-- Weights: [GitHub Releases](https://github.com/yuru-lab/open-body-tracker/releases) · [Hugging Face](https://huggingface.co/Yurup/open-body-tracker)
-- Model versions and benchmarks: [docs/MODELS.md](docs/MODELS.md) · accuracy, training data and limitations:
-  [MODEL_CARD.md](MODEL_CARD.md) · [DATA.md](DATA.md)
-
-| | **obt-body-v2** (default) | obt-body-v1 |
+| | **obt-body-v0.3.0** | obt-body-v0.3.0-int8 |
 |---|---:|---:|
-| COCO val2017 keypoint AP (2D, GT boxes, clean subset) | 71.6 | 71.7 |
-| ASPset-510 held-out subjects, PA-MPJPE (3D, body 12 points) ¹ | 53.7 mm | 67.9 mm |
-| Harmony4D test (other scenes, two people in contact), PA-MPJPE | 71.3 mm | 76.0 mm |
-| Model size | 95.6 M params · 191 MB (fp16 ONNX) | same |
-| Speed (one person) | ~6–10 ms on an RTX 3060 Ti | same |
+| 3D error, other scenes (Harmony4D, PA-MPJPE) | 71.3 mm | 71.8 mm |
+| 2D accuracy (COCO val2017 AP) | 71.6 | 71.7 |
+| Speed, one person | 6 ms GPU · 103 ms CPU | 46 ms CPU |
 
-<sub>¹ v2 was also trained on 7 other people filmed in the ASPset studio, so its gain there is larger than you
-should expect elsewhere; Harmony4D is the better guide. Details, intervals and the flip test: [docs/MODELS.md](docs/MODELS.md).</sub>
+The INT8 model is the same network quantized for CPUs. Versions, more benchmarks and how they were measured:
+[docs/MODELS.md](docs/MODELS.md).
+
+Next to other models, same frames and same scoring ([details](docs/MODELS.md#other-models-on-the-same-benchmarks)):
+
+| | 3D error, other scenes | 2D AP | Speed, one person |
+|---|---:|---:|---:|
+| **obt-body-v0.3.0** | **71.3 mm** | 71.6 | 6 ms GPU · 46 ms CPU (int8) |
+| MediaPipe Pose Full / Heavy | 103.3 / 105.8 mm | — | 25 / 52 ms CPU |
+| RTMW-m (2D only) | — | 74.1 | 9 ms GPU |
+| SAM 3D Body (our teacher, much larger) | 34.6 mm | — | 115 ms GPU |
 
 ## How it works
 
-```
-camera frame ──► YOLOX-nano / tiny ──► person box ──► 256×192 crop ──► obt-body ──► 23 × (x, y) + 23 × (X, Y, Z)
-                 (person detector)       ▲                                │
-                                         └──── box from the previous pose ┘   (detector re-runs every 1 s)
-```
+Each frame, YOLOX finds the person (then the last pose's box is reused for about a second), a 256 × 192 crop goes
+through the pose model, and a One Euro filter smooths the result.
+
+<p align="center"><img src="docs/architecture.svg" alt="Pose model: patch embedding, 12 DINOv2 transformer blocks, two-scale neck, keypoint head and classifiers" width="420"></p>
 
 ## Quick start
 
-Requires [mise](https://mise.jdx.dev/) (it installs Python, uv and Node) or Python 3.12 + [uv](https://docs.astral.sh/uv/).
-
 ```sh
-git clone https://github.com/yuru-lab/open-body-tracker
-cd open-body-tracker
-mise install          # Python 3.12, uv, Node
-mise run setup        # uv sync
-
-mise run demo         # webcam demo; models are downloaded to ./models on first run
-uv run obt-demo --image photo.jpg            # writes photo.pose.jpg
-uv run obt-demo --detector tiny              # fewer false detections, slower
-uv run obt-demo --flip                       # flip test: a little more accurate and steadier, ~2x slower
-uv run obt-demo --model-version v1           # the previous model
-uv sync --extra gpu && uv run obt-demo --gpu # CUDA
+git clone https://github.com/yuru-lab/open-body-tracker && cd open-body-tracker
+mise install && mise run setup   # or: Python 3.12 + uv, then `uv sync`
+mise run demo                    # webcam; models download on first run
 ```
 
-Browser demo locally: `mise run web`, then open http://localhost:8000. Put the ONNX files in `web/models/`
-to skip the download.
+```sh
+uv run obt-demo --image photo.jpg               # writes photo.pose.jpg
+uv run obt-demo --model-version v0.3.0-int8     # faster on a CPU
+uv sync --extra gpu && uv run obt-demo --gpu    # CUDA
+```
 
-The default person detector is YOLOX-nano (fast). If it mistakes chairs or other objects for a person, switch to YOLOX-tiny.
+Browser demo on your machine: `mise run web`, then open http://localhost:8000.
 
 ## Use it in your code
 
@@ -68,40 +65,25 @@ from open_body_tracker.detector import PersonDetector
 from open_body_tracker.hub import fetch, model_file
 from open_body_tracker.pipeline import PosePipeline
 
-pipeline = PosePipeline(fetch(model_file("v2")), PersonDetector(fetch("yolox_nano.onnx")))  # flip=True: flip test
+pipeline = PosePipeline(fetch(model_file()), PersonDetector(fetch("yolox_nano.onnx")))
 pose = pipeline(cv2.imread("photo.jpg")[:, :, ::-1].copy())  # RGB
-# pose["xy"]    (23, 2) image pixels
-# pose["score"] (23,)   confidence
-# pose["xyz"]   (23, 3) metres, hip-centred, camera axes (x right, y down, z forward)
+pose["xy"]     # (23, 2) image pixels
+pose["score"]  # (23,)   confidence
+pose["xyz"]    # (23, 3) metres, hip-centred, camera axes (x right, y down, z forward)
 ```
 
-Keypoint order: `open_body_tracker/keypoints.py` (COCO 17 + left/right big toe, small toe, heel).
+Keypoints: COCO 17 + big toe, small toe and heel on each foot ([keypoints.py](src/open_body_tracker/keypoints.py)).
 
-## Repository layout
+## More
 
-```
-src/open_body_tracker/   model (PyTorch), preprocessing, detector, tracking pipeline, demo
-web/                     browser demo (ONNX Runtime Web, WebGPU)
-scripts/                 checkpoint conversion and ONNX export
-docs/MODELS.md           model versions and benchmarks
-docs/REPRODUCE.md        training recipe and reproduction
-```
-
-## Reproducibility
-
-The training code is in [`training/`](training/) and the labels, including the SAM 3D Body teacher outputs (so you
-do not need to run SAM 3D Body), are on Hugging Face:
-[`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels). A full
-re-training run with exactly this code and these labels reproduced the released accuracy (COCO AP 71.6 vs 71.7,
-ASPset PA-MPJPE 67.6 vs 67.9 mm). obt-body-v2 adds one step that prepares ASPset-510 (CC0) crops; its training
-batches and first losses match the release run bit for bit. Steps and details: [docs/REPRODUCE.md](docs/REPRODUCE.md).
+- [Model versions and benchmarks](docs/MODELS.md) · [Model card](MODEL_CARD.md) · [Training data](DATA.md)
+- [Reproduce the training](docs/REPRODUCE.md): code in [`training/`](training/), labels on
+  [Hugging Face](https://huggingface.co/datasets/Yurup/open-body-tracker-labels)
 
 ## License
 
-- Code: [Apache-2.0](LICENSE)
-- Model weights and teacher labels: [SAM License](licenses/SAM-LICENSE.txt), because the model was trained on SAM 3D Body outputs. Redistribute with the license; its use restrictions apply.
-- obt-body-v2 was also trained on ASPset-510 (CC0)
-- Person detector: YOLOX (Apache-2.0, Megvii)
-- Third-party notices: [NOTICE](NOTICE)
+Code and model weights: [Apache-2.0](LICENSE). Thanks to Meta for [SAM 3D Body](https://github.com/facebookresearch/sam-3d-body),
+whose predictions were part of the training labels. Details and third-party credits: [docs/LICENSING.md](docs/LICENSING.md) ·
+[NOTICE](NOTICE)
 
-This is research software. It is not a medical or measurement device.
+Research software, not a medical or measurement device.

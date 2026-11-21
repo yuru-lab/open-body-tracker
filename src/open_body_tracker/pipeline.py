@@ -39,7 +39,7 @@ class PosePipeline:
     def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False):
         self.session = ort.InferenceSession(str(model_path), providers=providers or ["CPUExecutionProvider"])
         if flip and not set(flip_test.LOGITS) <= {o.name for o in self.session.get_outputs()}:
-            raise ValueError(f"{model_path} has no logit outputs; the flip test needs obt-body-v1/v2 (not obt-h3c.onnx)")
+            raise ValueError(f"{model_path} has no logit outputs; the flip test needs an obt-body-v0.x.x model (not obt-h3c.onnx)")
         self.flip = flip
         self.detector = detector
         self.tracker = BoxTracker() if track else None

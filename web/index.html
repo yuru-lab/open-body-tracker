@@ -15,10 +15,10 @@
   </header>
   <form id="controls">
     <label>Camera <select id="camera"><option value="">Default camera</option></select></label>
-    <label title="obt-body-v2 is more accurate in 3D; v1 is the first release. See docs/MODELS.md.">Model
+    <label title="obt-body-v0.3.0 is more accurate in 3D; v0.1.0 is the first model. See docs/MODELS.md.">Model
       <select id="model">
-        <option value="v2" selected>obt-body-v2 (latest)</option>
-        <option value="v1">obt-body-v1</option>
+        <option value="v0.3.0" selected>obt-body-v0.3.0 (latest)</option>
+        <option value="v0.1.0">obt-body-v0.1.0</option>
       </select>
     </label>
     <label title="Also runs the mirrored image and averages both: slightly more accurate and steadier, about 2x slower.">Flip test
@@ -69,8 +69,9 @@
   <p class="hint">Blue = left, orange = right. Box: yellow = found by the detector, green dashed = following the body. Drag the 3D view to rotate. <span id="stats"></span></p>
   <video id="video" playsinline muted hidden></video>
   <footer>
-    Model weights: <a href="https://github.com/facebookresearch/sam-3d-body/blob/main/LICENSE">SAM License</a> ·
-    code: Apache-2.0 · person detector: <a href="https://github.com/Megvii-BaseDetection/YOLOX">YOLOX</a> (Apache-2.0).
+    Code and model weights: Apache-2.0 · trained in part on labels from
+    <a href="https://github.com/facebookresearch/sam-3d-body">SAM 3D Body</a> (Meta) ·
+    person detector: <a href="https://github.com/Megvii-BaseDetection/YOLOX">YOLOX</a> (Apache-2.0).
     Research software; not a certified measuring device.
   </footer>
 </body>

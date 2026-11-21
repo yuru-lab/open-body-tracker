@@ -1,13 +1,13 @@
 # Reproducing the models
 
-Everything needed to train `obt-body-v1` (released as `obt-h3c`) and `obt-body-v2` from public data is in this repository and the label release
+Everything needed to train `obt-body-v0.1.0` (first released as `obt-h3c`) and `obt-body-v0.2.0` (= v0.3.0) from public data is in this repository and the label release
 [`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels).
 SAM 3D Body does **not** need to be run: its outputs are part of the label release.
 
 > **Verified (2026-11-20):** a full re-training run with exactly this code and the published labels, on one
 > RTX 3060 Ti, reproduces the released accuracy within run-to-run noise:
 >
-> Verified for **obt-body-v1**:
+> Verified for **obt-body-v0.1.0**:
 >
 > | | released `obt-h3c` | re-trained |
 > |---|---:|---:|
@@ -34,8 +34,8 @@ On the release machine all 265,463 crops were bit-identical (OpenCV 5.0.0, pinne
 | File | Content | Licence |
 |---|---|---|
 | `coco2014.json` | 15,044 COCO 2014 person crops (14,955 ordinary + 89 hard poses): photo, crop affine, 17 keypoints | annotations CC BY 4.0; photos CC BY 2.0 only |
-| `teacher.npz` | 250,419 Open Images V7 person crops: crop affine, 23 keypoints (2D) and 23 root-relative 3D joints from SAM 3D Body | SAM License |
-| `openimages.jsonl` | 106,308 Open Images photos: URL, SHA-256, licence, author, title | photos CC BY 2.0 |
+| `teacher.npz` | 250,419 Open Images V7 person crops: crop affine, 23 keypoints (2D) and 23 root-relative 3D joints from SAM 3D Body | keypoints Apache-2.0; crop boxes CC BY 4.0 (Open Images) |
+| `openimages.jsonl` | 106,308 Open Images photos: URL, SHA-256, licence, author, title | metadata CC BY 4.0; photos CC BY 2.0 (not included) |
 
 ## 2. Training
 
@@ -45,6 +45,10 @@ uv run python training/train.py --stage 3d --init runs/stage1/final.pt --out run
 uv run python scripts/convert_checkpoint.py runs/stage2/final.pt models/my-model.safetensors
 uv run python scripts/export_onnx.py models/my-model.safetensors models/my-model.onnx
 ```
+
+Optional CPU INT8 model: `uv run python scripts/quantize_onnx.py models/my-model.onnx models/my-model-int8.onnx`.
+From the released `obt-body-v0.3.0.onnx` it gives the released `obt-body-v0.3.0-int8.onnx` byte for byte
+(ONNX Runtime 1.32).
 
 Interrupted runs continue with `--resume` (checkpoint every 1,000 updates). Peak memory: about 7.5 GB of GPU memory
 (activation checkpointing, batch 32) and a few GB of RAM; the crops are memory-mapped.
@@ -68,9 +72,9 @@ How close is the code to the release run? Checked against the original (MMPose-b
 - the losses of the first 10 updates are identical; later updates drift slightly (different PyTorch version), so the
   final weights are not bit-identical and the accuracy is expected to match within run-to-run noise.
 
-## 2b. obt-body-v2: add ASPset-510 3D to stage 2
+## 2b. obt-body-v0.2.0 / v0.3.0: add ASPset-510 3D to stage 2
 
-v2 uses the same stage 1. Its stage 2 replaces 4 of the 12 teacher crops of every update with ASPset-510 (CC0)
+v0.2.0 uses the same stage 1. Its stage 2 replaces 4 of the 12 teacher crops of every update with ASPset-510 (CC0)
 crops and their multi-view 3D (body 12 points, hip-centred, no 2D label; 3D loss weight 1 as for the teacher).
 
 ```sh
@@ -85,14 +89,14 @@ script decodes the videos with OpenCV, crops around ASPset's own person boxes, a
 and labels against the SHA-256 of the release run. The ASPset subjects of the official test split (the 3D
 benchmark) and two development subjects are not used.
 
-How close is the code to the v2 release run? Checked against the original training code:
+How close is the code to the v0.2.0 release run? Checked against the original training code:
 
 - the ASPset crops and 3D labels are bit-identical (all 43,201 frames, OpenCV 5.0.0),
 - the augmented batches are bit-identical, including the 3D mask, at updates 1–10, 500, 1,000, 4,711, 7,065,
   9,421, 12,000 and the last update, 14,130,
 - from the release run's initial weights, the losses of the first 5 updates are identical.
 
-A full re-training of v2 with this code has not been run yet; as for v1, the final weights are expected to differ
+A full re-training of v0.2.0 with this code has not been run yet; as for v0.1.0, the final weights are expected to differ
 slightly (PyTorch version) and the accuracy to match within run-to-run noise.
 
 ## 3. Evaluation
@@ -102,5 +106,5 @@ uv run python training/evaluate_coco.py --weights models/my-model.safetensors --
 ```
 
 reports COCO val2017 keypoint AP with ground-truth boxes; "clean" excludes the 263 val2017 photos that appear in the
-training archives (`training/coco_val2017_exclude.json`). v1 scores 71.7 (clean) / 72.7 (full), v2 71.6 / 72.6.
+training archives (`training/coco_val2017_exclude.json`). v0.1.0 scores 71.7 (clean) / 72.7 (full), v0.2.0 / v0.3.0 71.6 / 72.6.
 The 3D benchmarks (ASPset-510 test subjects, Harmony4D) are described in [MODELS.md](MODELS.md).

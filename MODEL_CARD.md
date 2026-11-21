@@ -1,8 +1,9 @@
-# Model card: obt-body-v2 and obt-body-v1
+# Model card: obt-body
 
-obt-body-v2 (default) and obt-body-v1 share the architecture, input, outputs and speed. v2 adds 3D training data
-from ASPset-510. v1 is the first release (originally named `obt-h3c`). Version history and all benchmarks:
-[docs/MODELS.md](docs/MODELS.md).
+obt-body-v0.3.0 (default; same weights as v0.2.0) and obt-body-v0.1.0 share the architecture, input and outputs.
+v0.2.0 / v0.3.0 add 3D training data from ASPset-510. obt-body-v0.3.0-int8 is v0.3.0 quantized for CPUs.
+Earlier file names: `obt-body-v2.*` = v0.2.0, `obt-body-v1.*` and `obt-h3c.*` = v0.1.0. Version history and all
+benchmarks: [docs/MODELS.md](docs/MODELS.md).
 
 | | |
 |---|---|
@@ -11,8 +12,8 @@ from ASPset-510. v1 is the first release (originally named `obt-h3c`). Version h
 | Input | 256×192 person crop (from a person detector box, 25% margin) |
 | Architecture | DINOv2 ViT-B/14 backbone → 2-scale neck → RTMW-style SimCC head (2D) + 3 × 300-bin classifiers for X/Y/Z (1 cm bins, ±1.5 m around the hip midpoint) |
 | Parameters | 95.6 M |
-| Files | `obt-body-v2.safetensors` (PyTorch), `obt-body-v2.onnx` (fp32, 382 MB), `obt-body-v2-fp16.onnx` (fp16 weights, 191 MB); the same for `obt-body-v1`; `obt-h3c.*` = v1 under its original name (no logit outputs) |
-| License | **SAM License** (`licenses/SAM-LICENSE.txt`) — the model was trained on SAM 3D Body outputs |
+| Files | `obt-body-v0.3.0.safetensors` (PyTorch), `obt-body-v0.3.0.onnx` (fp32, 382 MB), `obt-body-v0.3.0-fp16.onnx` (fp16 weights, 191 MB), `obt-body-v0.3.0-int8.onnx` (INT8 for CPU, 142 MB); the same without int8 for v0.2.0 and v0.1.0; `obt-h3c.*` = v0.1.0 under its first name (no logit outputs) |
+| License | **Apache-2.0** (all versions; see [docs/LICENSING.md](docs/LICENSING.md)) |
 
 ## Training
 
@@ -24,7 +25,7 @@ Two stages, both starting from public weights only:
    were excluded (verified: zero CC BY-SA image ids in all updates).
 2. **3D (30 epochs, 14,130 updates)** — adds the 6 foot points and the metric X/Y/Z heads, trained on the
    SAM 3D Body 3D outputs of the same crops, while keeping the 2D labels.
-   **v2 only:** 4 of the 12 teacher crops of every update are replaced by ASPset-510 (CC0) crops of 7 training
+   **v0.2.0 / v0.3.0 only:** 4 of the 12 teacher crops of every update are replaced by ASPset-510 (CC0) crops of 7 training
    subjects (43,201 frames, one camera per recording) with their multi-view 3D (body 12 points, hip-centred; no 2D
    label). The ASPset subjects used for evaluation (official test split) are not among them.
 
@@ -35,23 +36,26 @@ picked among intermediate checkpoints. See [DATA.md](DATA.md) and [docs/REPRODUC
 
 Final evaluations, each run once on data not used for training or model selection:
 
-| Benchmark | Metric | obt-body-v2 | obt-body-v1 | Reference |
+| Benchmark | Metric | obt-body-v0.3.0 | obt-body-v0.1.0 | Reference |
 |---|---|---:|---:|---:|
 | COCO val2017, 2D, ground-truth boxes (images that overlap training removed, 4,737 images) | keypoint AP | **71.6** | 71.7 | RTMW-m (official): 74.1 |
 | ASPset-510, 3 held-out subjects, 3,877 frames ¹ | PA-MPJPE (body 12 points) | **53.7 mm** [51.6, 55.8] | 67.9 mm [65.5, 70.4] | SAM 3D Body teacher: 46.7 mm |
 | | MPJPE (hip-aligned) | 75.4 mm | 92.7 mm | teacher: 67.7 mm |
 | | left/right depth order correct | 99.1 % | 97.8 % | teacher: 99.3 % |
-| Harmony4D test, 3 sequences, 26,474 person crops (other scenes, fisheye cameras, two people in contact) | PA-MPJPE | **71.3 mm** | 76.0 mm | |
-| | MPJPE (hip-aligned) | 127.0 mm | 130.3 mm | |
+| Harmony4D test, 3 sequences, 26,474 person crops (other scenes, fisheye cameras, two people in contact) | PA-MPJPE | **71.3 mm** | 76.0 mm | teacher: 34.6 mm; MediaPipe Full: 103.3 mm |
+| | MPJPE (hip-aligned) | 127.0 mm | 130.3 mm | teacher: 70.6 mm |
 
-¹ v2 was trained on 7 other ASPset subjects filmed in the same studio, so this gain is larger than in other scenes.
+¹ v0.2.0 / v0.3.0 were trained on 7 other ASPset subjects filmed in the same studio, so this gain is larger than in other scenes.
 
 Intervals are 95% bootstrap intervals over recordings. ASPset reference 3D comes from a multi-camera
-markerless reconstruction, not motion capture. The optional flip test (crop + mirror, averaged) improves v2 by about
+markerless reconstruction, not motion capture. The optional flip test (crop + mirror, averaged) improves v0.3.0 by about
 1 mm in 3D and 3.5 mm in jitter at twice the cost; see [docs/MODELS.md](docs/MODELS.md).
 
-Speed (one 256×192 crop, batch 1, same for v1 and v2): 5.6 ms (fp16) / 8 ms (fp32) on an RTX 3060 Ti with
-PyTorch; ~100 ms on a Core i5-12600 CPU with ONNX Runtime (4 threads).
+Speed (one 256×192 crop, batch 1, same for every version): 5.6 ms (fp16) / 8 ms (fp32) on an RTX 3060 Ti with
+PyTorch; ~100 ms on a Core i5-12600 CPU with ONNX Runtime (4 threads), 46 ms with the INT8 model.
+
+INT8 model against float32 (paired): ASPset PA-MPJPE +0.18 mm, Harmony4D PA-MPJPE +0.52 mm, jitter +1.3 mm,
+COCO AP 71.7 (±0). The head and two MLP layers stay float32; see [docs/MODELS.md](docs/MODELS.md).
 Person detector on CPU (640×480, 2 threads): YOLOX-nano ~9 ms, YOLOX-tiny ~29 ms.
 
 Person detector on COCO val2017 (top-1 person box, IoU ≥ 0.5, images with one large person):
@@ -68,7 +72,8 @@ In live use YOLOX-nano sometimes locks onto chairs; switch to YOLOX-tiny if that
 
 ## License and use
 
-The weights (v1 and v2) are distributed under the SAM License (Meta). Redistribution must include the license, and the
-license's use restrictions apply (e.g. no military, warfare, weapons or ITAR-controlled uses). If you publish
-research results obtained with this model, acknowledge the use of SAM Materials. The training images remain
-under their own licences (CC BY 2.0; ASPset-510 for v2: CC0; see DATA.md).
+The weights are licensed under Apache-2.0, all versions included (until 2026-11-21 they were distributed under the
+SAM License). Part of the training labels were predicted by [SAM 3D Body](https://github.com/facebookresearch/sam-3d-body)
+(Meta); the weights contain no SAM 3D Body code or weights. Why we consider Apache-2.0 appropriate, what is not
+settled, and the licence history: [docs/LICENSING.md](docs/LICENSING.md). The training images keep their own
+licences (CC BY 2.0; ASPset-510: CC0; see DATA.md).

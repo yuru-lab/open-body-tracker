@@ -5,10 +5,12 @@ import { flipDecode, mirrorBatch } from './flip.js';
 // Models come from Hugging Face; when served from localhost, ./models/ is tried first.
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
 // float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB). See docs/MODELS.md.
+// Named after the release tag (docs/MODELS.md); OLD_NAMES maps saved settings. v0.2.0 has the same weights as v0.3.0.
 const POSE_MODELS = {
-  v2: { f16: 'obt-body-v2-fp16.onnx', f32: 'obt-body-v2.onnx' },
-  v1: { f16: 'obt-body-v1-fp16.onnx', f32: 'obt-body-v1.onnx' },
+  'v0.3.0': { f16: 'obt-body-v0.3.0-fp16.onnx', f32: 'obt-body-v0.3.0.onnx' },
+  'v0.1.0': { f16: 'obt-body-v0.1.0-fp16.onnx', f32: 'obt-body-v0.1.0.onnx' },
 };
+const OLD_NAMES = { v2: 'v0.3.0', v1: 'v0.1.0' };
 
 const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416;
 const HIPS = [11, 12];
@@ -338,7 +340,8 @@ function showValue(id) {
 }
 for (const id of SETTINGS) {
   try {
-    const saved = localStorage.getItem(`obt.${id}`), select = $(id).options;
+    let saved = localStorage.getItem(`obt.${id}`), select = $(id).options;
+    if (id === 'model' && saved in OLD_NAMES) saved = OLD_NAMES[saved];
     if (saved !== null && (!select || [...select].some((o) => o.value === saved))) $(id).value = saved;
   } catch {}
   showValue(id);
