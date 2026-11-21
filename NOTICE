@@ -18,6 +18,9 @@ This product includes or adapts the following third-party work:
 
 * ONNX Runtime (Microsoft), MIT License, loaded by the web demo from a CDN.
 
+* coi-serviceworker v0.1.7 (Guido Zuidhof and contributors), MIT License, https://github.com/gzuidhof/coi-serviceworker
+  web/coi-serviceworker.js, unmodified (licenses/coi-serviceworker-LICENSE.txt).
+
 Acknowledgement:
 
 * SAM 3D Body (Meta Platforms, Inc.), https://github.com/facebookresearch/sam-3d-body

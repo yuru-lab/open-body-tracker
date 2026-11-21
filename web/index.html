@@ -6,6 +6,8 @@
   <title>open-body-tracker demo</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:,">
+  <!-- Makes the page cross-origin isolated so the CPU (WASM) path can use several threads (MIT, licenses/). -->
+  <script src="coi-serviceworker.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
@@ -18,6 +20,7 @@
     <label title="obt-body-v0.3.0 is more accurate in 3D; v0.1.0 is the first model. See docs/MODELS.md.">Model
       <select id="model">
         <option value="v0.3.0" selected>obt-body-v0.3.0 (latest)</option>
+        <option value="v0.3.0-int8">obt-body-v0.3.0-int8 (CPU)</option>
         <option value="v0.1.0">obt-body-v0.1.0</option>
       </select>
     </label>

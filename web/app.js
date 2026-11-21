@@ -6,11 +6,15 @@ import { flipDecode, mirrorBatch } from './flip.js';
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
 // float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB). See docs/MODELS.md.
 // Named after the release tag (docs/MODELS.md); OLD_NAMES maps saved settings. v0.2.0 has the same weights as v0.3.0.
+// The INT8 model runs on the CPU (WASM) only; it is used automatically when WebGPU is not available.
 const POSE_MODELS = {
   'v0.3.0': { f16: 'obt-body-v0.3.0-fp16.onnx', f32: 'obt-body-v0.3.0.onnx' },
+  'v0.3.0-int8': { f16: 'obt-body-v0.3.0-int8.onnx', f32: 'obt-body-v0.3.0-int8.onnx', cpu: true },
   'v0.1.0': { f16: 'obt-body-v0.1.0-fp16.onnx', f32: 'obt-body-v0.1.0.onnx' },
 };
 const OLD_NAMES = { v2: 'v0.3.0', v1: 'v0.1.0' };
+// WASM uses several threads only in a cross-origin isolated page (coi-serviceworker.js sets that up on GitHub Pages).
+const cpuThreads = () => (self.crossOriginIsolated ? `${ort.env.wasm.numThreads || 'auto'} threads` : '1 thread');
 
 const CROP_W = 192, CROP_H = 256, PADDING = 1.25, DET_SIZE = 416;
 const HIPS = [11, 12];
@@ -27,7 +31,7 @@ const video = $('video');
 // Live settings (read every frame), remembered in this browser.
 const SETTINGS = ['model', 'flip', 'detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'view'];
 const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
-let backend = null, pose = null, poseName = null, f16 = false, detector = null, detectorName = null, running = false;
+let backend = null, pose = null, poseName = null, poseBackend = null, f16 = false, detector = null, detectorName = null, running = false;
 
 // ------------------------------------------------------------ model loading
 
@@ -57,10 +61,10 @@ async function modelBytes(name) {
   throw new Error(`could not download ${name}`);
 }
 
-async function session(name) {
+async function session(name, provider = backend) {
   const bytes = await modelBytes(name);
-  status(`Preparing ${name} (${backend})…`);
-  return ort.InferenceSession.create(bytes, { executionProviders: [backend], graphOptimizationLevel: 'all' });
+  status(`Preparing ${name} (${provider})…`);
+  return ort.InferenceSession.create(bytes, { executionProviders: [provider], graphOptimizationLevel: 'all' });
 }
 
 // ------------------------------------------------------------ person detector (official YOLOX ONNX)
@@ -252,9 +256,9 @@ async function loop(halted) {
       result = { ...result, xy: result.xy.map((_, k) => [xy[2 * k], xy[2 * k + 1]]), xyz: result.xyz.map((_, k) => [xyz[3 * k], xyz[3 * k + 1], xyz[3 * k + 2]]) };
     } else { filters.xy.reset(); filters.xyz.reset(); }
     draw(result, box, source);
-    window.openBodyTracker = { result, box, source, backend }; // for debugging and tests
+    window.openBodyTracker = { result, box, source, backend, poseName, poseBackend }; // for debugging and tests
     frames++; fps = 0.9 * fps + 0.1 * (1000 / Math.max(1, now - last)); last = now;
-    if (frames % 15 === 0) $('stats').textContent = `${fps.toFixed(0)} FPS · ${backend} · detector ran on ${(100 * detections / frames).toFixed(0)}% of frames`;
+    if (frames % 15 === 0) $('stats').textContent = `${fps.toFixed(0)} FPS · pose ${poseBackend === 'wasm' ? `CPU (${cpuThreads()})` : poseBackend} · detector ran on ${(100 * detections / frames).toFixed(0)}% of frames`;
     status(result ? 'Running' : 'No person found');
   }
 }
@@ -283,8 +287,13 @@ async function start() {
     backend = adapter ? 'webgpu' : 'wasm';
     f16 = Boolean(adapter?.features.has('shader-f16'));
   }
-  const wanted = POSE_MODELS[$('model').value][f16 ? 'f16' : 'f32'];
-  if (poseName !== wanted) { pose = await session(wanted); poseName = wanted; }
+  let choice = $('model').value;
+  if (backend === 'wasm' && choice === 'v0.3.0') choice = 'v0.3.0-int8';  // no WebGPU: the faster CPU model
+  const model = POSE_MODELS[choice], wanted = model[f16 ? 'f16' : 'f32'];
+  if (poseName !== wanted) {
+    poseBackend = model.cpu ? 'wasm' : backend;
+    pose = await session(wanted, poseBackend); poseName = wanted;
+  }
   if (detectorName !== $('detector').value) { detector = await session($('detector').value); detectorName = $('detector').value; }
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { deviceId: cameraChoice ? { exact: cameraChoice } : undefined, width: 640, height: 480 }, audio: false });
@@ -296,7 +305,8 @@ async function start() {
   filters.xy.reset(); filters.xyz.reset();
   running = true;
   $('start').disabled = false; $('start').textContent = 'Stop';
-  if (backend === 'wasm') status('WebGPU is not available; running on the CPU (slow).');
+  if (backend === 'wasm') status(`WebGPU is not available; running ${wanted} on the CPU (${cpuThreads()}).`);
+  else if (poseBackend === 'wasm') status(`Running ${wanted} on the CPU (${cpuThreads()}); WebGPU models are faster here.`);
   let signal;
   const halted = new Promise((resolve) => { signal = () => resolve(false); });
   const done = loop(halted).catch((error) => { current = null; running = false; stop(`Error: ${error.message}`); });

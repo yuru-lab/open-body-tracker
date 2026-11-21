@@ -21,7 +21,9 @@ fetch(model_file("v0.1.0", fp16=True))
 ```
 
 `uv run obt-demo --model-version v0.3.0-int8` and the **Model** menu of the browser demo switch models.
-The browser demo offers v0.3.0 and v0.1.0 (INT8 is not tested in browsers yet).
+The browser demo uses v0.3.0 on WebGPU and switches to v0.3.0-int8 on the CPU when WebGPU is not available.
+In a browser INT8 gains less than natively (WASM has no VNNI): about 200 ms per person with several threads
+(Core i5-12600, Chrome), against 285 ms for float32; WebGPU is much faster where available.
 
 ![v0.1.0, v0.3.0 and v0.3.0-int8 on the benchmarks](models.png)
 
