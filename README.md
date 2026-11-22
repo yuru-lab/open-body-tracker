@@ -5,7 +5,7 @@
 <p align="center">
   Full-body 3D pose from one RGB camera: 23 keypoints in 2D and in metres, in real time.<br>
   <a href="https://yuru-lab.github.io/open-body-tracker/"><b>Browser demo</b></a> ·
-  <a href="https://huggingface.co/Yurup/open-body-tracker">Models</a> ·
+  <a href="https://huggingface.co/Yurup/open-body-tracker">Models (Hugging Face)</a> ·
   <a href="docs/MODELS.md">Benchmarks</a>
 </p>
 

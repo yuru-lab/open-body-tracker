@@ -5,7 +5,7 @@
 <p align="center">
   RGBカメラ1台で全身の3D姿勢を推定。23点を画像上の2Dとメートル単位の3Dで、リアルタイムに。<br>
   <a href="https://yuru-lab.github.io/open-body-tracker/"><b>ブラウザデモ</b></a> ·
-  <a href="https://huggingface.co/Yurup/open-body-tracker">モデル</a> ·
+  <a href="https://huggingface.co/Yurup/open-body-tracker">モデル（Hugging Face）</a> ·
   <a href="docs/MODELS.md">評価</a>
 </p>
 
