@@ -72,6 +72,10 @@ pose["xyz"]    # (23, 3) メートル、腰の中心が原点、カメラの軸�
 
 点はCOCOの17点＋左右の足の親指・小指・かかとです（[keypoints.py](src/open_body_tracker/keypoints.py)）。
 
+モデルは腰が写っていないとき（肩までの構図、机の向こうなど）も腰を推定するので、その推定の揺れで3D全体が揺れます。
+`PosePipeline(..., anchor=True)`（`obt-demo --anchor`）にすると、腰が見えなくなれば肩、肩も見えなくなれば顔へと、
+3Dの原点を飛ばずに滑らかに移します。いまの割合は `pose["origin"]` に入ります（[anchor.py](src/open_body_tracker/anchor.py)）。
+
 ## もっと知る
 
 - [モデルの版と評価](docs/MODELS.md) · [モデルカード](MODEL_CARD.md) · [学習データ](DATA.md)（英語）

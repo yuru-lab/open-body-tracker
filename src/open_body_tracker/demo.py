@@ -5,6 +5,7 @@
     uv run obt-demo --image person.jpg   # writes person.pose.jpg
     uv run obt-demo --model-version v0.3.0-int8   # about 2x faster on CPUs; v0.1.0 = the first model
     uv run obt-demo --flip                         # flip test (about 2x slower, a little steadier)
+    uv run obt-demo --anchor                       # 3D origin follows the visible body (shoulders-up framing)
 """
 import argparse
 import math
@@ -20,6 +21,7 @@ from .keypoints import EDGES
 from .pipeline import PosePipeline
 
 LEFT, RIGHT, CENTRE = (235, 140, 40), (40, 140, 245), (200, 200, 200)  # BGR: blue = left, orange = right
+DRAW_SCORE = 3.0  # joints in view score about 6, joints out of view under 2
 
 
 def colour(a, b):
@@ -32,7 +34,7 @@ def draw_2d(frame, pose):
     x, y, w, h = map(int, pose["box"])
     cv2.rectangle(frame, (x, y), (x + w, y + h), (80, 200, 80) if pose["box_source"] == "tracker" else (0, 220, 255), 1)
     for a, b in EDGES:
-        if min(pose["score"][a], pose["score"][b]) > 0.3:
+        if min(pose["score"][a], pose["score"][b]) >= DRAW_SCORE:
             cv2.line(frame, tuple(map(int, pose["xy"][a])), tuple(map(int, pose["xy"][b])), colour(a, b), 2, cv2.LINE_AA)
 
 
@@ -59,12 +61,15 @@ def main():
                         help=f"pose model to download (default {DEFAULT_MODEL}; see docs/MODELS.md)")
     parser.add_argument("--model", type=Path, help="pose model ONNX file (overrides --model-version)")
     parser.add_argument("--flip", action="store_true", help="flip test: a little more accurate and steadier, about 2x slower")
+    parser.add_argument("--anchor", action="store_true",
+                        help="3D origin follows the visible body (hips, else shoulders, else face): steadier when only "
+                             "the upper body is in view")
     args = parser.parse_args()
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if args.gpu else ["CPUExecutionProvider"]
     detector = PersonDetector(fetch(f"yolox_{args.detector}.onnx"))
     pipeline = PosePipeline(args.model or fetch(model_file(args.model_version)), detector, providers,
-                            track=not args.no_track and not args.image, flip=args.flip)
+                            track=not args.no_track and not args.image, flip=args.flip, anchor=args.anchor)
 
     if args.image:
         frame = cv2.imread(str(args.image))

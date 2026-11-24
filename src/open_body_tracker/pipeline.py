@@ -5,6 +5,7 @@ import numpy as np
 import onnxruntime as ort
 
 from . import flip as flip_test
+from .anchor import BodyAnchor
 from .keypoints import HIPS
 from .preprocess import crop
 from .smoothing import OneEuro
@@ -36,7 +37,9 @@ class BoxTracker:
 
 
 class PosePipeline:
-    def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False):
+    def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False, anchor=False):
+        """anchor=True: the 3D origin follows the visible body (hips, else shoulders, else face; see anchor.py)
+        instead of always being the hips, which are guessed when out of view."""
         self.session = ort.InferenceSession(str(model_path), providers=providers or ["CPUExecutionProvider"])
         if flip and not set(flip_test.LOGITS) <= {o.name for o in self.session.get_outputs()}:
             raise ValueError(f"{model_path} has no logit outputs; the flip test needs an obt-body-v0.x.x model (not obt-h3c.onnx)")
@@ -44,9 +47,11 @@ class PosePipeline:
         self.detector = detector
         self.tracker = BoxTracker() if track else None
         self.filters = dict(xy=OneEuro(0.65, 0.006), xyz=OneEuro(0.65, 0.5)) if smoothing else None
+        self.anchor = BodyAnchor() if anchor else None
 
     def __call__(self, rgb, now=None):
-        """-> dict(box, xy (23,2) image px, score (23,), xyz (23,3) metres, hip-centred) or None."""
+        """-> dict(box, xy (23,2) image px, score (23,), xyz (23,3) metres, hip-centred) or None.
+        With anchor=True, xyz is relative to the blended origin and "origin" holds its (hips, shoulders, face) weights."""
         now = time.monotonic() if now is None else now
         height, width = rgb.shape[:2]
         if self.tracker is None or self.tracker.needs_detection(now):
@@ -60,6 +65,8 @@ class PosePipeline:
             if self.filters:
                 for f in self.filters.values():
                     f.reset()
+            if self.anchor is not None:
+                self.anchor.reset()
             return None
         patch, inverse = crop(rgb, box)
         crops = patch.transpose(2, 0, 1)[None].astype(np.float32)
@@ -71,6 +78,11 @@ class PosePipeline:
         score, xyz = score[0], xyz[0] - xyz[0][list(HIPS)].mean(0)
         if self.tracker is not None:
             self.tracker.update(xy, score, width, height)
+        if self.anchor is not None:
+            xyz = self.anchor(xyz, score, now)
         if self.filters:
             xy, xyz = self.filters["xy"](xy, now), self.filters["xyz"](xyz, now)
-        return dict(box=box, box_source=source, xy=xy, score=score, xyz=xyz)
+        pose = dict(box=box, box_source=source, xy=xy, score=score, xyz=xyz)
+        if self.anchor is not None:
+            pose["origin"] = dict(zip(("hips", "shoulders", "face"), self.anchor.weights.tolist()))
+        return pose
