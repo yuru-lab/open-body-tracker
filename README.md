@@ -74,6 +74,11 @@ pose["xyz"]    # (23, 3) metres, hip-centred, camera axes (x right, y down, z fo
 
 Keypoints: COCO 17 + big toe, small toe and heel on each foot ([keypoints.py](src/open_body_tracker/keypoints.py)).
 
+The model always predicts the hips, also when they are out of view (shoulders-up framing, a desk in front), and
+the guessed hips make the whole 3D pose shake. `PosePipeline(..., anchor=True)` (`obt-demo --anchor`) moves the 3D
+origin smoothly to the shoulders and then the face as the hips and then the shoulders leave the view, without a jump
+at the hand-off; `pose["origin"]` gives the current weights ([anchor.py](src/open_body_tracker/anchor.py)).
+
 ## More
 
 - [Model versions and benchmarks](docs/MODELS.md) · [Model card](MODEL_CARD.md) · [Training data](DATA.md)

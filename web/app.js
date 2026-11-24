@@ -1,6 +1,7 @@
 // open-body-tracker browser demo: YOLOX person detector + 3D pose model, both on ONNX Runtime Web (WebGPU, WASM fallback).
 import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.webgpu.min.mjs';
 import { flipDecode, mirrorBatch } from './flip.js';
+import { BodyAnchor } from './anchor.js';
 
 // Models come from Hugging Face; when served from localhost, ./models/ is tried first.
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
@@ -29,7 +30,7 @@ const $ = (id) => document.getElementById(id);
 const status = (text) => { $('status').textContent = text; };
 const video = $('video');
 // Live settings (read every frame), remembered in this browser.
-const SETTINGS = ['model', 'flip', 'detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'view'];
+const SETTINGS = ['model', 'flip', 'detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'origin', 'view'];
 const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
 let backend = null, pose = null, poseName = null, poseBackend = null, f16 = false, detector = null, detectorName = null, running = false;
 
@@ -139,9 +140,12 @@ async function flipTest(input, plane) {
   return flipDecode(await pose.run({ crop: new ort.Tensor('float32', mirrorBatch(input, plane, CROP_W, CROP_H), [2, 3, CROP_H, CROP_W]) }));
 }
 
-// Box from the previous pose: confident points (at least 8), 15% margin per side.
+// Box from the previous pose: points scoring at least TRACK_SCORE (at least 8), 15% margin per side; as BoxTracker in
+// pipeline.py. Fixed, unlike the display threshold: a stricter box (score 3, 5 points) was not steadier in replays and
+// called the person detector about twice as often.
+const TRACK_SCORE = 0.3;
 function boxFromPose(result, width, height) {
-  const good = result.xy.filter((_, k) => result.score[k] >= threshold('jointThreshold'));
+  const good = result.xy.filter((_, k) => result.score[k] >= TRACK_SCORE);
   if (good.length < 8) return null;
   let [l, t, r, b] = [Infinity, Infinity, -Infinity, -Infinity];
   for (const [x, y] of good) { l = Math.min(l, x); t = Math.min(t, y); r = Math.max(r, x); b = Math.max(b, y); }
@@ -170,6 +174,7 @@ class OneEuro {
 // [min cutoff (Hz), beta for 2D (per px/s), beta for 3D (per m/s)]: lower = steadier, more delay.
 const SMOOTHING = { light: [1.5, 0.01, 1.0], medium: [0.65, 0.006, 0.5], strong: [0.25, 0.003, 0.25] };
 const filters = { xy: new OneEuro(0.65, 0.006), xyz: new OneEuro(0.65, 0.5) };
+const anchor = new BodyAnchor();
 function setSmoothing(level) {
   if (!SMOOTHING[level]) return;
   const [minCutoff, beta2d, beta3d] = SMOOTHING[level];
@@ -251,6 +256,8 @@ async function loop(halted) {
     }
     let result = box ? await estimate(box) : null;
     tracked = result ? boxFromPose(result, width, height) : null;
+    if (result && setting('origin') === 'visible') result = { ...result, xyz: anchor.apply(result.xyz, result.score, now / 1000) };
+    else anchor.reset();
     if (result && setting('smoothing') !== 'off') {
       const t = now / 1000, xy = filters.xy.filter(result.xy.flat(), t), xyz = filters.xyz.filter(result.xyz.flat(), t);
       result = { ...result, xy: result.xy.map((_, k) => [xy[2 * k], xy[2 * k + 1]]), xyz: result.xyz.map((_, k) => [xyz[3 * k], xyz[3 * k + 1], xyz[3 * k + 2]]) };
@@ -302,7 +309,7 @@ async function start() {
   await video.play();
   $('image').width = 640; $('image').height = Math.round(640 * video.videoHeight / video.videoWidth);
   await listCameras(stream.getVideoTracks()[0].getSettings().deviceId);
-  filters.xy.reset(); filters.xyz.reset();
+  filters.xy.reset(); filters.xyz.reset(); anchor.reset();
   running = true;
   $('start').disabled = false; $('start').textContent = 'Stop';
   if (backend === 'wasm') status(`WebGPU is not available; running ${wanted} on the CPU (${cpuThreads()}).`);
@@ -352,6 +359,7 @@ for (const id of SETTINGS) {
   try {
     let saved = localStorage.getItem(`obt.${id}`), select = $(id).options;
     if (id === 'model' && saved in OLD_NAMES) saved = OLD_NAMES[saved];
+    if (id === 'jointThreshold' && Number(saved) < 1) saved = null;  // saved on the old 0-0.9 scale
     if (saved !== null && (!select || [...select].some((o) => o.value === saved))) $(id).value = saved;
   } catch {}
   showValue(id);
