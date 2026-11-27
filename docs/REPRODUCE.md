@@ -1,10 +1,10 @@
 # Reproducing the models
 
-Everything needed to train `obt-body-v0.1.0` (first released as `obt-h3c`) and `obt-body-v0.2.0` (= v0.3.0) from public data is in this repository and the label release
-[`Yurup/open-body-tracker-labels`](https://huggingface.co/datasets/Yurup/open-body-tracker-labels).
-SAM 3D Body does **not** need to be run: its outputs are part of the label release.
+The training code for `obt-body-v0.1.0` (first released as `obt-h3c`) and `obt-body-v0.2.0` (= v0.3.0) is in this repository.
+The label files it reads (`coco2014.json`, `teacher.npz`, `openimages.jsonl`) are **not distributed**; the steps below
+assume you have them in `labels/`.
 
-> **Verified (2026-11-20):** a full re-training run with exactly this code and the published labels, on one
+> **Verified (2026-11-20):** a full re-training run with exactly this code and the release labels, on one
 > RTX 3060 Ti, reproduces the released accuracy within run-to-run noise:
 >
 > Verified for **obt-body-v0.1.0**:
@@ -23,7 +23,6 @@ SAM 3D Body does **not** need to be run: its outputs are part of the label relea
 
 ```sh
 uv sync --extra train
-uv run hf download Yurup/open-body-tracker-labels --repo-type dataset --local-dir labels
 uv run python training/prepare_data.py --labels labels --out data      # downloads ~110k photos, ~40 GB of crops
 ```
 
@@ -31,11 +30,11 @@ uv run python training/prepare_data.py --labels labels --out data      # downloa
 SHA-256, cuts the fixed 256×192 crop and compares the crop with the SHA-256 of the crop used for the release.
 On the release machine all 265,463 crops were bit-identical (OpenCV 5.0.0, pinned in `pyproject.toml`).
 
-| File | Content | Licence |
-|---|---|---|
-| `coco2014.json` | 15,044 COCO 2014 person crops (14,955 ordinary + 89 hard poses): photo, crop affine, 17 keypoints | annotations CC BY 4.0; photos CC BY 2.0 only |
-| `teacher.npz` | 250,419 Open Images V7 person crops: crop affine, 23 keypoints (2D) and 23 root-relative 3D joints from SAM 3D Body | keypoints Apache-2.0; crop boxes CC BY 4.0 (Open Images) |
-| `openimages.jsonl` | 106,308 Open Images photos: URL, SHA-256, licence, author, title | metadata CC BY 4.0; photos CC BY 2.0 (not included) |
+| File | Content |
+|---|---|
+| `coco2014.json` | 15,044 COCO 2014 person crops (14,955 ordinary + 89 hard poses): photo, crop affine, 17 keypoints |
+| `teacher.npz` | 250,419 Open Images V7 person crops: crop affine, 23 keypoints (2D) and 23 root-relative 3D joints from SAM 3D Body |
+| `openimages.jsonl` | 106,308 Open Images photos: URL, SHA-256, licence, author, title |
 
 ## 2. Training
 

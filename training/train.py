@@ -51,7 +51,7 @@ STAGES = {  # epochs of 471 updates, peak learning rate
 # ---------------------------------------------------------------- data
 
 class Data:
-    """Crops (from prepare_data.py) and labels (from the label release), in label order."""
+    """Crops (from prepare_data.py) and labels (the label files), in label order."""
 
     def __init__(self, labels, data, stage, aspset=False):
         self.stage = stage
