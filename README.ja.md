@@ -79,7 +79,7 @@ pose["xyz"]    # (23, 3) メートル、腰の中心が原点、カメラの軸�
 ## もっと知る
 
 - [モデルの版と評価](docs/MODELS.md) · [モデルカード](MODEL_CARD.md) · [学習データ](DATA.md)（英語）
-- [学習の再現](docs/REPRODUCE.md)：コードは [`training/`](training/)、ラベルは [Hugging Face](https://huggingface.co/datasets/Yurup/open-body-tracker-labels)
+- [学習の再現](docs/REPRODUCE.md)：コードは [`training/`](training/)
 
 ## ライセンス
 

@@ -82,8 +82,7 @@ at the hand-off; `pose["origin"]` gives the current weights ([anchor.py](src/ope
 ## More
 
 - [Model versions and benchmarks](docs/MODELS.md) · [Model card](MODEL_CARD.md) · [Training data](DATA.md)
-- [Reproduce the training](docs/REPRODUCE.md): code in [`training/`](training/), labels on
-  [Hugging Face](https://huggingface.co/datasets/Yurup/open-body-tracker-labels)
+- [Reproduce the training](docs/REPRODUCE.md): code in [`training/`](training/)
 
 ## License
 

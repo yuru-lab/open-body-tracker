@@ -1,8 +1,8 @@
-"""Download the training photos and cut the fixed 256x192 crops listed in the released labels.
+"""Download the training photos and cut the fixed 256x192 crops listed in the label files.
 
     uv run --extra train python training/prepare_data.py --labels labels --out data
 
-Inputs (from the label release, see docs/REPRODUCE.md):
+Inputs (label files, not distributed; see docs/REPRODUCE.md):
     labels/coco2014.json      COCO 2014 crops (human keypoints) and their source photos
     labels/teacher.npz        Open Images V7 crops with SAM 3D Body teacher labels
     labels/openimages.jsonl   Open Images source photos (URL, SHA-256, licence, author)
