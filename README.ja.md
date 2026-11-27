@@ -9,6 +9,11 @@
   <a href="docs/MODELS.md">評価</a>
 </p>
 
+<p align="center"><img src="docs/sample-aspset.gif" alt="映像上の2D骨格と、正解と並べた3Dの予測" width="800"></p>
+
+<p align="center"><sub>学習に一度も使っていない人の映像（<a href="https://github.com/anibali/aspset-510">ASPset-510</a>、CC0）。
+グレーが正解の3D、色がobt-body-v0.4.0-small（カメラ1台、ASPsetの人物枠を使用、平滑化なし）。<br>3D誤差（PA-MPJPE）はこのクリップで59 mm、ASPsetの評価用クリップ全体で平均50.3 mmです。</sub></p>
+
 ## モデル
 
 | | **obt-body-v0.4.0-small**（標準） | **obt-body-v0.4.0** | obt-body-v0.3.0 |
@@ -16,7 +21,7 @@
 | 3D誤差・Harmony4D 06/16（PA-MPJPE）¹ | 49.4 mm | **45.2 mm** | — |
 | 3D誤差・Harmony4D 01/05/15（PA-MPJPE） | 52.8 mm | **48.9 mm** | 71.3 mm |
 | 3D誤差・ASPset（学習に使っていない3人、PA-MPJPE） | 50.3 mm | **48.1 mm** | 53.7 mm |
-| 2D精度（COCO val2017 AP） | 69.9 | **72.8** | 71.6 |
+| 2D精度（COCO val2017 clean AP） | 69.9 | **72.8** | 71.6 |
 | 速度（1人）：GPU fp16 · CPU int8 | 5 ms · 48 ms | 6 ms · 120 ms | 4 ms · 47 ms |
 
 ¹ v0.4.0を確定するまで開けずにおき、確定後に一度だけ採点したHarmony4Dの2系列。速度はRTX 5080（PyTorch）と
@@ -26,7 +31,7 @@ Core i5-12600（ONNX Runtime、4スレッド）。標準のv0.4.0-smallはv0.3.0
 
 ほかのモデルとの比較（同じフレーム・同じ採点、[詳細](docs/MODELS.md#other-models-on-the-same-benchmarks)）：
 
-| | 3D誤差・Harmony4D 06/16 | 3D誤差・Harmony4D 01/05/15 | 2D AP | 速度（1人） |
+| | 3D誤差・Harmony4D 06/16 | 3D誤差・Harmony4D 01/05/15 | COCO val2017 clean AP | 速度（1人） |
 |---|---:|---:|---:|---:|
 | **obt-body-v0.4.0** | **45.2 mm** | 48.9 mm | 72.8 | GPU 6 ms · CPU 120 ms（int8） |
 | **obt-body-v0.4.0-small** | 49.4 mm | 52.8 mm | 69.9 | GPU 5 ms · CPU 48 ms（int8） |
@@ -35,13 +40,15 @@ Core i5-12600（ONNX Runtime、4スレッド）。標準のv0.4.0-smallはv0.3.0
 | RTMW-m（2Dのみ） | — | — | 74.1 | GPU 9 ms |
 | SAM 3D Body（学習ラベルの元、ずっと大きいモデル） | — | 34.6 mm | — | GPU 115 ms |
 
-² InstantHMRはHarmony4D 01/05/15と同じセッションの別の録画（同じ人・同じ会場）で学習しています。06/16はこの表のどのモデルにとっても初めて見る録画です。
+² InstantHMRはHarmony4D 01/05/15と同じセッションの別の録画（同じ人・同じ会場）で学習しています。
+Harmony4D 06/16はobt-bodyのv0.4.0系列2モデルとInstantHMRのいずれも学習に使用していません。
 
 ## しくみ
 
-フレームごとにYOLOXで人を見つけ（その後の約1秒は前の姿勢の枠を使い回し）、256 × 192に切り抜いて姿勢モデルに通し、One Euroフィルターで揺れを抑えます。
+YOLOXで人を検出し、約1秒ごと、または追跡が途切れたときに再検出します。検出の間は、直前に推定した姿勢から次のフレームの人物枠を作ります。
+256 × 192に切り抜いて姿勢モデルに入力し、One Euroフィルターで揺れを抑えます。
 
-<p align="center"><img src="docs/architecture.svg" alt="姿勢モデル：パッチ埋め込み、DINOv2の12ブロック、2段階の特徴、関節のヘッドと分類器" width="420"></p>
+<p align="center"><img src="docs/architecture.svg" alt="v0.4.0の姿勢モデル。DINOv2で特徴を抽出し、関節と体型を推定して3D骨格を復元する" width="420"></p>
 
 ## はじめかた
 

@@ -9,6 +9,11 @@
   <a href="docs/MODELS.md">Benchmarks</a>
 </p>
 
+<p align="center"><img src="docs/sample-aspset.gif" alt="2D skeleton on the video and the 3D prediction next to the reference" width="800"></p>
+
+<p align="center"><sub>A person never used in training (<a href="https://github.com/anibali/aspset-510">ASPset-510</a>, CC0).
+Grey: reference 3D. Colour: obt-body-v0.4.0-small, one camera, ASPset person boxes, no smoothing.<br>PA-MPJPE is 59 mm in this clip and 50.3 mm across the held-out ASPset recordings.</sub></p>
+
 ## Models
 
 | | **obt-body-v0.4.0-small** (default) | **obt-body-v0.4.0** | obt-body-v0.3.0 |
@@ -16,7 +21,7 @@
 | 3D error, Harmony4D 06/16 (PA-MPJPE) ¹ | 49.4 mm | **45.2 mm** | — |
 | 3D error, Harmony4D 01/05/15 (PA-MPJPE) | 52.8 mm | **48.9 mm** | 71.3 mm |
 | 3D error, ASPset held-out (PA-MPJPE) | 50.3 mm | **48.1 mm** | 53.7 mm |
-| 2D accuracy (COCO val2017 AP) | 69.9 | **72.8** | 71.6 |
+| 2D accuracy (COCO val2017 clean AP) | 69.9 | **72.8** | 71.6 |
 | Speed, one person: GPU fp16 · CPU int8 | 5 ms · 48 ms | 6 ms · 120 ms | 4 ms · 47 ms |
 
 ¹ Two Harmony4D sequences kept closed until v0.4.0 was fixed, then scored once. Speed: RTX 5080 (PyTorch) and
@@ -26,7 +31,7 @@ they were measured: [docs/MODELS.md](docs/MODELS.md).
 
 Next to other models, same frames and same scoring ([details](docs/MODELS.md#other-models-on-the-same-benchmarks)):
 
-| | 3D error, Harmony4D 06/16 | 3D error, Harmony4D 01/05/15 | 2D AP | Speed, one person |
+| | 3D error, Harmony4D 06/16 | 3D error, Harmony4D 01/05/15 | COCO val2017 clean AP | Speed, one person |
 |---|---:|---:|---:|---:|
 | **obt-body-v0.4.0** | **45.2 mm** | 48.9 mm | 72.8 | 6 ms GPU · 120 ms CPU (int8) |
 | **obt-body-v0.4.0-small** | 49.4 mm | 52.8 mm | 69.9 | 5 ms GPU · 48 ms CPU (int8) |
@@ -35,15 +40,16 @@ Next to other models, same frames and same scoring ([details](docs/MODELS.md#oth
 | RTMW-m (2D only) | — | — | 74.1 | 9 ms GPU |
 | SAM 3D Body (our teacher, much larger) | — | 34.6 mm | — | 115 ms GPU |
 
-² InstantHMR was trained on other recordings of the Harmony4D 01/05/15 sessions (same people and venue); 06/16 are
-new to every model in this table.
+² InstantHMR was trained on other recordings of the Harmony4D 01/05/15 sessions (same people and venue).
+Harmony4D 06/16 were held out for both obt-body v0.4.0 models and InstantHMR.
 
 ## How it works
 
-Each frame, YOLOX finds the person (then the last pose's box is reused for about a second), a 256 × 192 crop goes
-through the pose model, and a One Euro filter smooths the result.
+YOLOX finds the person and refreshes the detection about once per second or when tracking is lost. Between
+detections, the previous pose supplies the box for the next frame. The pose model takes a 256 × 192 crop,
+and a One Euro filter smooths the result.
 
-<p align="center"><img src="docs/architecture.svg" alt="Pose model: patch embedding, 12 DINOv2 transformer blocks, two-scale neck, keypoint head and classifiers" width="420"></p>
+<p align="center"><img src="docs/architecture.svg" alt="v0.4.0 pose model with a DINOv2 backbone, keypoint and shape heads, and rigid 3D skeleton decoding" width="420"></p>
 
 ## Quick start
 
