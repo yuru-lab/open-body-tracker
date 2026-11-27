@@ -4,15 +4,10 @@
 
 <p align="center">
   Full-body 3D pose from one RGB camera: 23 keypoints in 2D and in metres, in real time.<br>
-  <a href="https://yuru-lab.github.io/open-body-tracker/"><b>Browser demo</b></a> ·
+  <a href="https://yuru-lab.github.io/open-body-tracker/"><b>Browser demo (v0.4.0-small)</b></a> ·
   <a href="https://huggingface.co/Yurup/open-body-tracker">Models (Hugging Face)</a> ·
   <a href="docs/MODELS.md">Benchmarks</a>
 </p>
-
-<p align="center"><img src="docs/sample-aspset.gif" alt="2D skeleton on the video and the 3D prediction next to the reference" width="800"></p>
-
-<p align="center"><sub>A person never used in training (<a href="https://github.com/anibali/aspset-510">ASPset-510</a>, CC0).
-Grey: reference 3D. Colour: obt-body-v0.3.0, one camera, no smoothing.<br>3D error in this clip 56 mm; 53.7 mm on average.</sub></p>
 
 ## Models
 

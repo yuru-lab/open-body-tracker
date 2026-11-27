@@ -4,15 +4,10 @@
 
 <p align="center">
   RGBカメラ1台で全身の3D姿勢を推定。23点を画像上の2Dとメートル単位の3Dで、リアルタイムに。<br>
-  <a href="https://yuru-lab.github.io/open-body-tracker/"><b>ブラウザデモ</b></a> ·
+  <a href="https://yuru-lab.github.io/open-body-tracker/"><b>ブラウザデモ（v0.4.0-small）</b></a> ·
   <a href="https://huggingface.co/Yurup/open-body-tracker">モデル（Hugging Face）</a> ·
   <a href="docs/MODELS.md">評価</a>
 </p>
-
-<p align="center"><img src="docs/sample-aspset.gif" alt="映像上の2D骨格と、正解と並べた3Dの予測" width="800"></p>
-
-<p align="center"><sub>学習に一度も使っていない人の映像（<a href="https://github.com/anibali/aspset-510">ASPset-510</a>、CC0）。
-グレーが正解の3D、色がobt-body-v0.3.0（カメラ1台、平滑化なし）。<br>このクリップの3D誤差は56mm、全体の平均は53.7mmです。</sub></p>
 
 ## モデル
 
