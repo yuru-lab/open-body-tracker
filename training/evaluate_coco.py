@@ -16,7 +16,6 @@ import cv2
 import numpy as np
 import torch
 
-from open_body_tracker.model import decode
 from open_body_tracker.preprocess import crop, normalize
 from open_body_tracker.weights import load_model
 
@@ -60,7 +59,7 @@ def main():
 
     def flush():
         with torch.inference_mode():
-            xy, score, _ = decode(model(torch.from_numpy(normalize(np.stack([b[0] for b in batch]))).to(device)))
+            xy, score, _ = model.decode(model(torch.from_numpy(normalize(np.stack([b[0] for b in batch]))).to(device)))
         for (patch, inverse), image_id, points, scores in zip(batch, owners, xy.cpu().numpy().astype(np.float64), score.cpu().numpy()):
             points = points[:17] @ inverse[:, :2].T + inverse[:, 2]
             detections.append(dict(image_id=image_id, category_id=1, score=float(np.clip(scores[:17], 0, None).mean()),

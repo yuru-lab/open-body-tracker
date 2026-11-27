@@ -6,6 +6,7 @@ import onnxruntime as ort
 
 from . import flip as flip_test
 from .anchor import BodyAnchor
+from .geometry import ray_to_camera
 from .keypoints import HIPS
 from .preprocess import crop
 from .smoothing import OneEuro
@@ -37,10 +38,15 @@ class BoxTracker:
 
 
 class PosePipeline:
-    def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False, anchor=False):
+    def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False, anchor=False,
+                 focal=None):
         """anchor=True: the 3D origin follows the visible body (hips, else shoulders, else face; see anchor.py)
-        instead of always being the hips, which are guessed when out of view."""
+        instead of always being the hips, which are guessed when out of view.
+        focal: the camera's focal length in pixels, used by v0.4.0 models to turn their 3D from the crop's ray frame
+        into camera axes (None: a 65-degree horizontal field of view is assumed; see geometry.py)."""
         self.session = ort.InferenceSession(str(model_path), providers=providers or ["CPUExecutionProvider"])
+        self.ray_frame = self.session.get_modelmeta().custom_metadata_map.get("obt.frame") == "ray"
+        self.focal = focal
         if flip and not set(flip_test.LOGITS) <= {o.name for o in self.session.get_outputs()}:
             raise ValueError(f"{model_path} has no logit outputs; the flip test needs an obt-body-v0.x.x model (not obt-h3c.onnx)")
         self.flip = flip
@@ -75,7 +81,10 @@ class PosePipeline:
         else:
             xy, score, xyz = self.session.run(["xy", "score", "xyz"], {"crop": crops})
         xy = xy[0] @ inverse[:, :2].T + inverse[:, 2]
-        score, xyz = score[0], xyz[0] - xyz[0][list(HIPS)].mean(0)
+        score, xyz = score[0], xyz[0]
+        if self.ray_frame:
+            xyz = ray_to_camera(xyz, inverse, width, height, self.focal)
+        xyz = xyz - xyz[list(HIPS)].mean(0)
         if self.tracker is not None:
             self.tracker.update(xy, score, width, height)
         if self.anchor is not None:

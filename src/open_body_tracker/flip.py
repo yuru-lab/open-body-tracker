@@ -1,8 +1,10 @@
-"""Flip test: run the crop and its mirror image, average the classifier outputs, then decode.
+"""Flip test: run the crop and its mirror image and average the two predictions.
 
-This is MMPose's SimCC flip test extended to the X/Y/Z heads: the mirror's x and X bins are reversed (both axes are
-symmetric around the crop centre / the hips) and left/right points are swapped. It roughly doubles the pose-model
-time; on the benchmarks in docs/MODELS.md it lowers the 3D error by about 1 mm and the frame-to-frame jitter by about 3.5 mm.
+Models up to v0.3.0 average the classifier outputs, then decode: MMPose's SimCC flip test extended to the X/Y/Z heads
+(the mirror's x and X bins are reversed, both axes being symmetric around the crop centre / the hips, and left/right
+points are swapped). v0.4.0 models (ONNX metadata obt.flip = "outputs") average the decoded outputs instead, because
+their 3D goes through the rigid skeleton: the mirror's x becomes 191 - x, its X becomes -X (exact in the ray frame),
+left/right swapped. Either way it roughly doubles the pose-model time; docs/MODELS.md lists what it gains.
 """
 import numpy as np
 
@@ -39,8 +41,25 @@ def decode(logits):
     return xy, score, np.stack([expectation(v) for v in (X, Y, Z)], -1).astype(np.float32)
 
 
+def average_outputs(plain, mirrored, width=192):
+    """(xy, score, xyz) of the crops and of their mirrors -> the average, mirror mapped back."""
+    index = np.array(FLIP)
+    xy, score, xyz = (v[:, index].copy() for v in mirrored)
+    xy[..., 0] = width - 1 - xy[..., 0]
+    xyz[..., 0] = -xyz[..., 0]
+    return tuple((a + b) / 2 for a, b in zip(plain, (xy, score, xyz)))
+
+
+def averages_outputs(session):
+    return session.get_modelmeta().custom_metadata_map.get("obt.flip") == "outputs"
+
+
 def run(session, crops):
     """crops (N, 3, 256, 192) float32 RGB 0-255 -> flip-tested (xy, score, xyz)."""
     n = len(crops)
-    outputs = session.run(LOGITS, {"crop": np.concatenate([crops, mirror(crops)])})
+    both = {"crop": np.concatenate([crops, mirror(crops)])}
+    if averages_outputs(session):
+        outputs = session.run(["xy", "score", "xyz"], both)
+        return average_outputs([o[:n] for o in outputs], [o[n:] for o in outputs])
+    outputs = session.run(LOGITS, both)
     return decode(average([o[:n] for o in outputs], [o[n:] for o in outputs]))

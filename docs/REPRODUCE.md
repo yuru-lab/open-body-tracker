@@ -1,6 +1,8 @@
 # Reproducing the models
 
 The training code for `obt-body-v0.1.0` (first released as `obt-h3c`) and `obt-body-v0.2.0` (= v0.3.0) is in this repository.
+The training code of `obt-body-v0.4.0` / `v0.4.0-small` (Harmony4D data, ray-frame targets, rigid skeleton,
+distillation) is not yet included; MODEL_CARD.md describes the recipe.
 The label files it reads (`coco2014.json`, `teacher.npz`, `openimages.jsonl`) are **not distributed**; the steps below
 assume you have them in `labels/`.
 

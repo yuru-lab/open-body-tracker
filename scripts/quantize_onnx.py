@@ -21,11 +21,11 @@ from onnxruntime.quantization.shape_inference import quant_pre_process
 FLOAT_BLOCKS = (8, 11)
 
 
-def float_nodes(model):
+def float_nodes(model, blocks=FLOAT_BLOCKS):
     names = [n.name for n in model.graph.node if n.op_type == "MatMul"]
-    keep = [n for n in names if "/head/" in n]
-    keep += [n for n in names for b in FLOAT_BLOCKS if f"/blocks.{b}/mlp/fc2/" in n]
-    assert len(keep) == len([n for n in names if "/head/" in n]) + len(FLOAT_BLOCKS), "unexpected graph"
+    keep = [n for n in names if "/head/" in n or "/shape/" in n]
+    keep += [n for n in names for b in blocks if f"/blocks.{b}/mlp/fc2/" in n]
+    assert len(keep) == len([n for n in names if "/head/" in n or "/shape/" in n]) + len(blocks), "unexpected graph"
     return keep
 
 
@@ -33,12 +33,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("source", type=Path)
     parser.add_argument("target", type=Path)
+    parser.add_argument("--float-blocks", default=",".join(map(str, FLOAT_BLOCKS)),
+                        help="backbone blocks whose second MLP layer stays float32 (default %(default)s, chosen for v0.3.0)")
     args = parser.parse_args()
+    blocks = tuple(int(b) for b in args.float_blocks.split(",") if b)
     with tempfile.TemporaryDirectory() as scratch:
         prepared = Path(scratch) / "prepared.onnx"
         quant_pre_process(str(args.source), str(prepared), skip_symbolic_shape=True)
         quantize_dynamic(prepared, args.target, weight_type=QuantType.QInt8, per_channel=True, reduce_range=True,
-                         op_types_to_quantize=["MatMul"], nodes_to_exclude=float_nodes(onnx.load(prepared)))
+                         op_types_to_quantize=["MatMul"], nodes_to_exclude=float_nodes(onnx.load(prepared), blocks))
     print(args.target, hashlib.sha256(args.target.read_bytes()).hexdigest())
 
 

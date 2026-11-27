@@ -1,5 +1,6 @@
-// Flip test, the same computation as src/open_body_tracker/flip.py: average the classifier outputs of a crop and of its
-// mirror image (mirror: x and X bins reversed, left/right points swapped), then decode.
+// Flip test, the same computation as src/open_body_tracker/flip.py. Models up to v0.3.0: average the classifier outputs
+// of a crop and of its mirror image (mirror: x and X bins reversed, left/right points swapped), then decode (flipDecode).
+// v0.4.0 models: average the decoded outputs (mirror: x -> width - 1 - x, X -> -X, left/right swapped; flipOutputs).
 const FLIP = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 20, 21, 22, 17, 18, 19];
 const SIMCC_SPLIT = 2, METRIC_BINS = 300, METRIC_RANGE = 1.5;
 
@@ -50,6 +51,22 @@ export function flipDecode(out) {
       }
       xyz[3 * k + axis] = mean / sum;
     });
+  }
+  return { xy, score, xyz };
+}
+
+// outputs of a batch-2 run of a v0.4.0 model (xy, score, xyz) -> the average of the crop and its mirror, mapped back.
+export function flipOutputs(out, width) {
+  const xy = new Float32Array(46), score = new Float32Array(23), xyz = new Float32Array(69);
+  const a = out.xy.data, s = out.score.data, p = out.xyz.data;
+  for (let k = 0; k < 23; k++) {
+    const m = FLIP[k];
+    xy[2 * k] = (a[2 * k] + width - 1 - a[46 + 2 * m]) / 2;
+    xy[2 * k + 1] = (a[2 * k + 1] + a[46 + 2 * m + 1]) / 2;
+    score[k] = (s[k] + s[23 + m]) / 2;
+    xyz[3 * k] = (p[3 * k] - p[69 + 3 * m]) / 2;
+    xyz[3 * k + 1] = (p[3 * k + 1] + p[69 + 3 * m + 1]) / 2;
+    xyz[3 * k + 2] = (p[3 * k + 2] + p[69 + 3 * m + 2]) / 2;
   }
   return { xy, score, xyz };
 }

@@ -1,19 +1,28 @@
 // open-body-tracker browser demo: YOLOX person detector + 3D pose model, both on ONNX Runtime Web (WebGPU, WASM fallback).
 import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.webgpu.min.mjs';
-import { flipDecode, mirrorBatch } from './flip.js';
+import { flipDecode, flipOutputs, mirrorBatch } from './flip.js';
 import { BodyAnchor } from './anchor.js';
 
 // Models come from Hugging Face; when served from localhost, ./models/ is tried first.
 const HF = 'https://huggingface.co/Yurup/open-body-tracker/resolve/main/';
-// float16 weights (190 MB) when the GPU supports shader-f16, otherwise float32 (380 MB). See docs/MODELS.md.
+// float16 weights when the GPU supports shader-f16, otherwise float32. See docs/MODELS.md.
 // Named after the release tag (docs/MODELS.md); OLD_NAMES maps saved settings. v0.2.0 has the same weights as v0.3.0.
-// The INT8 model runs on the CPU (WASM) only; it is used automatically when WebGPU is not available.
+// INT8 models run on the CPU (WASM) only; `int8` names the one used automatically when WebGPU is not available.
+// ray: v0.4.0 models give 3D in the crop's ray frame (turned back to camera axes in estimate()) and flip-test by
+// averaging their decoded outputs.
 const POSE_MODELS = {
-  'v0.3.0': { f16: 'obt-body-v0.3.0-fp16.onnx', f32: 'obt-body-v0.3.0.onnx' },
+  'v0.4.0-small': { f16: 'obt-body-v0.4.0-small-fp16.onnx', f32: 'obt-body-v0.4.0-small.onnx', ray: true, int8: 'v0.4.0-small-int8' },
+  'v0.4.0': { f16: 'obt-body-v0.4.0-fp16.onnx', f32: 'obt-body-v0.4.0.onnx', ray: true, int8: 'v0.4.0-int8' },
+  'v0.4.0-small-int8': { f16: 'obt-body-v0.4.0-small-int8.onnx', f32: 'obt-body-v0.4.0-small-int8.onnx', ray: true, cpu: true },
+  'v0.4.0-int8': { f16: 'obt-body-v0.4.0-int8.onnx', f32: 'obt-body-v0.4.0-int8.onnx', ray: true, cpu: true },
+  'v0.3.0': { f16: 'obt-body-v0.3.0-fp16.onnx', f32: 'obt-body-v0.3.0.onnx', int8: 'v0.3.0-int8' },
   'v0.3.0-int8': { f16: 'obt-body-v0.3.0-int8.onnx', f32: 'obt-body-v0.3.0-int8.onnx', cpu: true },
   'v0.1.0': { f16: 'obt-body-v0.1.0-fp16.onnx', f32: 'obt-body-v0.1.0.onnx' },
 };
 const OLD_NAMES = { v2: 'v0.3.0', v1: 'v0.1.0' };
+// Camera focal length assumed when turning ray-frame 3D into camera axes: a 65-degree horizontal field of view
+// (src/open_body_tracker/geometry.py).
+const DEFAULT_FOV = 65;
 // WASM uses several threads only in a cross-origin isolated page (coi-serviceworker.js sets that up on GitHub Pages).
 const cpuThreads = () => (self.crossOriginIsolated ? `${ort.env.wasm.numThreads || 'auto'} threads` : '1 thread');
 
@@ -32,7 +41,7 @@ const video = $('video');
 // Live settings (read every frame), remembered in this browser.
 const SETTINGS = ['model', 'flip', 'detector', 'schedule', 'personThreshold', 'jointThreshold', 'smoothing', 'origin', 'view'];
 const setting = (id) => $(id).value, threshold = (id) => Number($(id).value);
-let backend = null, pose = null, poseName = null, poseBackend = null, f16 = false, detector = null, detectorName = null, running = false;
+let backend = null, pose = null, poseName = null, poseBackend = null, poseRay = false, f16 = false, detector = null, detectorName = null, running = false;
 
 // ------------------------------------------------------------ model loading
 
@@ -122,12 +131,26 @@ async function estimate(box) {
   for (let i = 0; i < plane; i++) { input[i] = rgba[i * 4]; input[plane + i] = rgba[i * 4 + 1]; input[2 * plane + i] = rgba[i * 4 + 2]; }
   const out = setting('flip') === 'on' ? await flipTest(input, plane) : await plain(input);
   const xy = [], xyz = [], score = Array.from(out.score), s = w / CROP_W;
+  const turn = poseRay ? rayToCamera(sx + 96 * s, sy + 128 * s) : null;
   for (let k = 0; k < 23; k++) {
     xy.push([sx + out.xy[k * 2] * s, sy + out.xy[k * 2 + 1] * s]);
-    xyz.push([out.xyz[k * 3], out.xyz[k * 3 + 1], out.xyz[k * 3 + 2]]);
+    const p = [out.xyz[k * 3], out.xyz[k * 3 + 1], out.xyz[k * 3 + 2]];
+    xyz.push(turn ? [0, 1, 2].map((j) => p[0] * turn[0][j] + p[1] * turn[1][j] + p[2] * turn[2][j]) : p);
   }
   const root = [0, 1, 2].map((i) => (xyz[HIPS[0]][i] + xyz[HIPS[1]][i]) / 2);
   return { box, xy, score, xyz: xyz.map((p) => p.map((v, i) => v - root[i])) };
+}
+
+// Ray frame -> camera axes (src/open_body_tracker/geometry.py): R turns the ray through the crop centre (u, v) onto +z
+// by the smallest rotation; a ray-frame point p (row vector) becomes p R in camera axes.
+function rayToCamera(u, v) {
+  const f = video.videoWidth / 2 / Math.tan(DEFAULT_FOV * Math.PI / 360);
+  let r = [(u - video.videoWidth / 2) / f, (v - video.videoHeight / 2) / f, 1];
+  const n = Math.hypot(...r); r = r.map((c) => c / n);
+  const a = [r[1], -r[0], 0], sin = Math.hypot(a[0], a[1]), cos = r[2];  // a = r x z
+  if (sin < 1e-12) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  const K = [[0, -a[2], a[1]], [a[2], 0, -a[0]], [-a[1], a[0], 0]], k = (1 - cos) / (sin * sin);
+  return [0, 1, 2].map((i) => [0, 1, 2].map((j) => (i === j ? 1 : 0) + K[i][j] + k * [0, 1, 2].reduce((t, m) => t + K[i][m] * K[m][j], 0)));
 }
 
 async function plain(input) {
@@ -135,9 +158,10 @@ async function plain(input) {
   return { xy: out.xy.data, score: out.score.data, xyz: out.xyz.data };
 }
 
-// Flip test: the crop and its mirror in one batch, classifier outputs averaged (web/flip.js). About 2x slower.
+// Flip test: the crop and its mirror in one batch, averaged (web/flip.js). About 2x slower.
 async function flipTest(input, plane) {
-  return flipDecode(await pose.run({ crop: new ort.Tensor('float32', mirrorBatch(input, plane, CROP_W, CROP_H), [2, 3, CROP_H, CROP_W]) }));
+  const out = await pose.run({ crop: new ort.Tensor('float32', mirrorBatch(input, plane, CROP_W, CROP_H), [2, 3, CROP_H, CROP_W]) });
+  return poseRay ? flipOutputs(out, CROP_W) : flipDecode(out);
 }
 
 // Box from the previous pose: points scoring at least TRACK_SCORE (at least 8), 15% margin per side; as BoxTracker in
@@ -295,8 +319,9 @@ async function start() {
     f16 = Boolean(adapter?.features.has('shader-f16'));
   }
   let choice = $('model').value;
-  if (backend === 'wasm' && choice === 'v0.3.0') choice = 'v0.3.0-int8';  // no WebGPU: the faster CPU model
+  if (backend === 'wasm' && POSE_MODELS[choice].int8) choice = POSE_MODELS[choice].int8;  // no WebGPU: the faster CPU model
   const model = POSE_MODELS[choice], wanted = model[f16 ? 'f16' : 'f32'];
+  poseRay = Boolean(model.ray);
   if (poseName !== wanted) {
     poseBackend = model.cpu ? 'wasm' : backend;
     pose = await session(wanted, poseBackend); poseName = wanted;

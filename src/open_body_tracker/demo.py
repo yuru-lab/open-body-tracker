@@ -3,7 +3,7 @@
     uv run obt-demo                      # webcam 0, YOLOX-nano, CPU
     uv run obt-demo --detector tiny --gpu
     uv run obt-demo --image person.jpg   # writes person.pose.jpg
-    uv run obt-demo --model-version v0.3.0-int8   # about 2x faster on CPUs; v0.1.0 = the first model
+    uv run obt-demo --model-version v0.4.0-small-int8   # faster on CPUs; v0.4.0 = larger, more accurate
     uv run obt-demo --flip                         # flip test (about 2x slower, a little steadier)
     uv run obt-demo --anchor                       # 3D origin follows the visible body (shoulders-up framing)
 """
@@ -64,12 +64,15 @@ def main():
     parser.add_argument("--anchor", action="store_true",
                         help="3D origin follows the visible body (hips, else shoulders, else face): steadier when only "
                              "the upper body is in view")
+    parser.add_argument("--focal", type=float,
+                        help="camera focal length in pixels (v0.4.0 models; default: 65-degree horizontal field of view)")
     args = parser.parse_args()
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if args.gpu else ["CPUExecutionProvider"]
     detector = PersonDetector(fetch(f"yolox_{args.detector}.onnx"))
     pipeline = PosePipeline(args.model or fetch(model_file(args.model_version)), detector, providers,
-                            track=not args.no_track and not args.image, flip=args.flip, anchor=args.anchor)
+                            track=not args.no_track and not args.image, flip=args.flip, anchor=args.anchor,
+                            focal=args.focal)
 
     if args.image:
         frame = cv2.imread(str(args.image))

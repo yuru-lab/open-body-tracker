@@ -4,8 +4,11 @@ Input  "crop":  float32 (N, 3, 256, 192), RGB 0-255 (a person crop, see open_bod
 Outputs "xy":   float32 (N, 23, 2)  keypoints in crop pixels
         "score": float32 (N, 23)    2D confidence (SimCC peak logit)
         "xyz":  float32 (N, 23, 3)  metres relative to the model's root; subtract the hip midpoint for display
+                                    (v0.4.0: hip midpoint at 0, in the crop's ray frame, see open_body_tracker.geometry)
         "logits_x", "logits_y", "logits_X", "logits_Y", "logits_Z": the raw classifier outputs (N, 23, bins), used
-        by the flip test (open_body_tracker.flip), which averages them with those of the mirrored crop
+        by the flip test of models up to v0.3.0 (open_body_tracker.flip), which averages them with those of the
+        mirrored crop; v0.4.0 models average the decoded outputs instead (their 3D goes through the rigid skeleton)
+Metadata (v0.4.0): obt.frame = "ray", obt.flip = "outputs", and the model configuration.
 """
 import argparse
 from pathlib import Path
@@ -14,7 +17,6 @@ import torch
 from torch import nn
 
 from open_body_tracker.flip import LOGITS
-from open_body_tracker.model import decode
 from open_body_tracker.preprocess import MEAN, STD
 from open_body_tracker.weights import load_model
 
@@ -27,8 +29,8 @@ class Exported(nn.Module):
         self.register_buffer("std", torch.tensor(STD).view(1, 3, 1, 1))
 
     def forward(self, crop):
-        logits = self.model((crop - self.mean) / self.std)
-        return (*decode(logits), *logits)
+        outputs = self.model((crop - self.mean) / self.std)
+        return (*self.model.decode(outputs), *outputs[:5])
 
 
 def main():
@@ -44,6 +46,14 @@ def main():
     torch.onnx.export(model, (example,), args.output, input_names=["crop"], output_names=outputs,
                       dynamic_axes={name: {0: "n"} for name in ["crop", *outputs]},
                       opset_version=17, dynamo=False)
+    config = model.model.config
+    if config.rigid:
+        import onnx
+        proto = onnx.load(str(args.output))
+        meta = {"obt.frame": config.frame, "obt.flip": "outputs", **{f"obt.{k}": v for k, v in config.metadata().items()}}
+        for key, value in meta.items():
+            proto.metadata_props.add(key=key, value=value)
+        onnx.save(proto, str(args.output))
     if args.fp16:
         import onnx
         from onnxruntime.transformers.float16 import convert_float_to_float16
