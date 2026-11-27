@@ -36,18 +36,31 @@ def test_tracker_box_from_confident_points():
     assert tracker.box is None
 
 
-@pytest.mark.parametrize("name", ["obt-body-v0.1.0", "obt-body-v0.3.0"])
+def test_ray_to_camera():
+    from open_body_tracker.geometry import default_focal, ray_to_camera, rotation_to_z
+    points = np.random.default_rng(2).normal(size=(23, 3))
+    _, centred = crop(np.zeros((480, 640, 3), np.uint8), [270, 90, 100, 300])  # crop centre = image centre
+    np.testing.assert_allclose(ray_to_camera(points, centred, 640, 480), points, atol=1e-6)
+    _, inverse = crop(np.zeros((480, 640, 3), np.uint8), [500, 100, 100, 300])  # crop centre at (550, 250)
+    focal = default_focal(640)
+    ray = np.array([(550 - 320) / focal, (250 - 240) / focal, 1.0])
+    np.testing.assert_allclose(rotation_to_z(ray) @ (ray / np.linalg.norm(ray)), [0, 0, 1], atol=1e-12)
+    # the ray-frame forward axis becomes the ray through the crop centre
+    np.testing.assert_allclose(ray_to_camera(np.array([0, 0, 1.0]), inverse, 640, 480), ray / np.linalg.norm(ray), atol=1e-6)
+
+
+@pytest.mark.parametrize("name", ["obt-body-v0.1.0", "obt-body-v0.3.0", "obt-body-v0.4.0-small", "obt-body-v0.4.0"])
 def test_onnx_matches_pytorch(name):
     if not (MODELS / f"{name}.safetensors").exists() or not (MODELS / f"{name}.onnx").exists():
         pytest.skip(f"needs models/{name}.safetensors and models/{name}.onnx")
     torch = pytest.importorskip("torch")
     import onnxruntime as ort
-    from open_body_tracker.model import decode
     from open_body_tracker.preprocess import normalize
     from open_body_tracker.weights import load_model
     crops = np.random.default_rng(0).integers(0, 256, (2, 256, 192, 3), dtype=np.uint8)
     with torch.inference_mode():
-        xy, score, xyz = (v.numpy() for v in decode(load_model(MODELS / f"{name}.safetensors")(torch.from_numpy(normalize(crops)))))
+        model = load_model(MODELS / f"{name}.safetensors")
+        xy, score, xyz = (v.numpy() for v in model.decode(model(torch.from_numpy(normalize(crops)))))
     session = ort.InferenceSession(str(MODELS / f"{name}.onnx"), providers=["CPUExecutionProvider"])
     oxy, oscore, oxyz = session.run(["xy", "score", "xyz"], {"crop": crops.transpose(0, 3, 1, 2).astype(np.float32)})
     assert np.mean(np.abs(oxy - xy) < 1) > 0.99
@@ -80,10 +93,12 @@ def test_flip_test_matches_logit_average():
 
 def test_model_names():
     from open_body_tracker.hub import FILES, MODELS, model_file
-    assert model_file() == "obt-body-v0.3.0.onnx" and model_file("v2", fp16=True) == "obt-body-v0.2.0-fp16.onnx"
+    assert model_file() == "obt-body-v0.4.0-small.onnx" and model_file("v0.4.0", fp16=True) == "obt-body-v0.4.0-fp16.onnx"
+    assert model_file("v2", fp16=True) == "obt-body-v0.2.0-fp16.onnx" and model_file("v0.4.0-small-int8") == "obt-body-v0.4.0-small-int8.onnx"
     assert model_file("v1") == "obt-body-v0.1.0.onnx" and model_file("v0.3.0-int8") == "obt-body-v0.3.0-int8.onnx"
-    with pytest.raises(ValueError):
-        model_file("v0.3.0-int8", fp16=True)
+    for int8 in ("v0.3.0-int8", "v0.4.0-small-int8"):
+        with pytest.raises(ValueError):
+            model_file(int8, fp16=True)
     assert all(model_file(v) in FILES for v in MODELS)
     # renamed files are the same bytes as their earlier names
     assert FILES["obt-body-v0.3.0.onnx"][1] == FILES["obt-body-v0.2.0.onnx"][1] == FILES["obt-body-v2.onnx"][1]
@@ -103,3 +118,29 @@ def test_int8_close_to_float32():
     (xy, _, xyz), (qxy, _, qxyz) = full.run(names, {"crop": crops}), int8.run(names, {"crop": crops})
     assert np.abs(qxy - xy).mean() < 3 and np.abs(qxyz - xyz).mean() < 0.03
     assert all(np.isfinite(v).all() for v in flip.run(int8, crops))  # the logit outputs are kept, so the flip test works
+
+
+def test_flip_test_averages_outputs_for_v040():
+    """v0.4.0: open_body_tracker.flip == averaging the decoded PyTorch outputs of the crop and its mirror."""
+    name = "obt-body-v0.4.0-small"
+    if not (MODELS / f"{name}.safetensors").exists() or not (MODELS / f"{name}.onnx").exists():
+        pytest.skip(f"needs models/{name}.safetensors and models/{name}.onnx")
+    torch = pytest.importorskip("torch")
+    import onnxruntime as ort
+    from open_body_tracker import flip
+    from open_body_tracker.preprocess import normalize
+    from open_body_tracker.weights import load_model
+    crops = np.random.default_rng(1).integers(0, 256, (2, 256, 192, 3), dtype=np.uint8)
+    model, index = load_model(MODELS / f"{name}.safetensors"), torch.tensor(FLIP)
+    with torch.inference_mode():
+        image = torch.from_numpy(normalize(crops))
+        pxy, _, pxyz = model.decode(model(image))
+        mxy, _, mxyz = model.decode(model(image.flip(-1)))
+        mxy, mxyz = mxy[:, index].clone(), mxyz[:, index].clone()
+        mxy[..., 0], mxyz[..., 0] = 191 - mxy[..., 0], -mxyz[..., 0]
+        xy, xyz = ((pxy + mxy) / 2).numpy(), ((pxyz + mxyz) / 2).numpy()
+    session = ort.InferenceSession(str(MODELS / f"{name}.onnx"), providers=["CPUExecutionProvider"])
+    assert flip.averages_outputs(session)
+    fxy, _, fxyz = flip.run(session, crops.transpose(0, 3, 1, 2).astype(np.float32))
+    assert np.mean(np.abs(fxy - xy) < 1) > 0.99
+    assert np.abs(fxyz - xyz).max() < 1e-3

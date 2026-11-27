@@ -17,9 +17,13 @@
   </header>
   <form id="controls">
     <label>Camera <select id="camera"><option value="">Default camera</option></select></label>
-    <label title="obt-body-v0.3.0 is more accurate in 3D; v0.1.0 is the first model. See docs/MODELS.md.">Model
+    <label title="obt-body-v0.4.0-small is the default; v0.4.0 (larger) is more accurate and slower. See docs/MODELS.md.">Model
       <select id="model">
-        <option value="v0.3.0" selected>obt-body-v0.3.0 (latest)</option>
+        <option value="v0.4.0-small" selected>obt-body-v0.4.0-small (latest)</option>
+        <option value="v0.4.0">obt-body-v0.4.0 (larger, more accurate)</option>
+        <option value="v0.4.0-small-int8">obt-body-v0.4.0-small-int8 (CPU)</option>
+        <option value="v0.4.0-int8">obt-body-v0.4.0-int8 (CPU)</option>
+        <option value="v0.3.0">obt-body-v0.3.0</option>
         <option value="v0.3.0-int8">obt-body-v0.3.0-int8 (CPU)</option>
         <option value="v0.1.0">obt-body-v0.1.0</option>
       </select>

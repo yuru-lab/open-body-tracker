@@ -22,7 +22,7 @@ which is distributed under the SAM License. We are grateful to Meta for releasin
 - The License treats outputs separately from SAM Materials ("the SAM Materials and any output and results",
   Sections 3 and 5.b) and has no clause that restricts what outputs may be used for, including training other models.
 - Our weights contain no SAM Materials: no SAM 3D Body code, weights or architecture. They are DINOv2 ViT-B/14
-  weights (Apache-2.0) trained further, plus a head re-implemented from MMPose (Apache-2.0). SAM 3D Body was only
+  or ViT-S/14 weights (Apache-2.0) trained further, plus a head re-implemented from MMPose (Apache-2.0). SAM 3D Body was only
   run to produce keypoint labels.
 
 We therefore distribute the weights under Apache-2.0 and do not pass on the SAM License's
@@ -43,3 +43,4 @@ The SAM License text is kept in `licenses/` for that reason; it is **not** the l
 | 2026-11-18 (v0.1.0), 2026-11-20 (v0.2.0) | Weights and teacher labels released under the SAM License, as a conservative first choice. |
 | 2026-11-21 (v0.3.0) | Weights (all versions, including the files first released in v0.1.0 and v0.2.0) and teacher labels relicensed to Apache-2.0, for the reasons above. COCO- and Open Images-derived parts unchanged (CC BY 4.0). Copies obtained earlier under the SAM License may still be used under it; the Apache-2.0 grant is offered in addition. |
 | 2026-11-27 | Training labels withdrawn: no longer distributed. Weights unchanged (Apache-2.0). |
+| 2026-11-28 (v0.4.0) | New weights v0.4.0 and v0.4.0-small, Apache-2.0. Additional training data: Harmony4D (MIT) multi-view 3D; v0.4.0-small also learned from the outputs of our own larger model. |

@@ -1,13 +1,20 @@
-"""The network: a DINOv2 ViT-B/14 backbone with an RTMW-style SimCC head and a metric 3D head.
+"""The network: a DINOv2 ViT backbone with an RTMW-style SimCC head and a metric 3D head.
 
 Input: a 256x192 (height x width) person crop, ImageNet-normalized RGB.
 Outputs (logits):
   x (N, 23, 384), y (N, 23, 512)   2D SimCC classification, 2 bins per crop pixel
   X, Y, Z (N, 23, 300)              root-relative metric coordinates, 1 cm bins over [-1.5 m, 1.5 m]
+  shape (N, 4)                      rigid models only: body-shape code that sets the 10 bone lengths
+
+Releases up to v0.3.0: ViT-B/14 on an 18x14 patch grid, 3D in camera axes. From v0.4.0 (`ModelConfig`): ViT-S/14 or
+ViT-B/14 on a 26x20 grid, 3D in the crop's ray frame (a camera turned to look through the crop centre; see
+open_body_tracker.geometry), and a rigid skeleton: bone directions from the X/Y/Z joints, bone lengths from the shape
+code, joints rebuilt outwards from the hip midpoint (left and right share lengths).
 
 The head follows RTMWHead / RTMCCBlock from MMPose (Apache-2.0, OpenMMLab), rewritten in plain PyTorch
 with the same parameter names, so no MMPose or MMCV install is needed. See NOTICE.
 """
+from dataclasses import dataclass
 import math
 
 import torch
@@ -23,6 +30,36 @@ WIDTH, HEADS = 768, 12     # ViT-B/14
 HEAD_CHANNELS = 768
 SIMCC_SPLIT = 2.0
 METRIC_RANGE, METRIC_BINS = 1.5, 300
+BACKBONES = {"b": (768, 12), "s": (384, 6)}  # DINOv2 ViT-B/14, ViT-S/14 (both 12 blocks): width, heads
+
+# Rigid skeleton: bone lengths (left and right share one) and bones as (parent, child, length index)
+LENGTHS = ("hip_width", "torso", "shoulder_width", "upper_arm", "forearm", "thigh", "shin", "big_toe", "small_toe", "heel")
+LIMBS = ((5, 7, 3), (7, 9, 4), (6, 8, 3), (8, 10, 4), (11, 13, 5), (13, 15, 6), (12, 14, 5), (14, 16, 6),
+         (15, 17, 7), (15, 18, 8), (15, 19, 9), (16, 20, 7), (16, 21, 8), (16, 22, 9))
+SHAPE_DIM = 4
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """backbone "b" / "s"; grid = ViT patch grid (the crop is resized to grid x 14 inside the model); rigid = shape head
+    and rigid skeleton; frame = "camera" (up to v0.3.0) or "ray" (3D in the crop's ray frame, v0.4.0)."""
+    backbone: str = "b"
+    grid: tuple = GRID
+    rigid: bool = False
+    frame: str = "camera"
+
+    def metadata(self):
+        return {"backbone": self.backbone, "grid": f"{self.grid[0]}x{self.grid[1]}", "rigid": str(int(self.rigid)), "frame": self.frame}
+
+    @classmethod
+    def from_metadata(cls, meta):
+        meta = meta or {}
+        if "backbone" not in meta:  # releases up to v0.3.0 carry no configuration
+            return cls()
+        return cls(meta["backbone"], tuple(int(v) for v in meta["grid"].split("x")), meta["rigid"] == "1", meta["frame"])
+
+
+V040 = dict(grid=(26, 20), rigid=True, frame="ray")
 
 
 # ---------------------------------------------------------------- backbone (DINOv2 ViT-B/14)
@@ -182,9 +219,10 @@ class GAU(nn.Module):
 class Head(nn.Module):
     """keypoints=17, metric=False is the 2D model of training stage 1; the released model is 23 points with metric 3D."""
 
-    def __init__(self, keypoints=NUM_KEYPOINTS, metric=True, hidden=256, kernel=7):
+    def __init__(self, keypoints=NUM_KEYPOINTS, metric=True, hidden=256, kernel=7, grid=None):
         super().__init__()
-        coarse = (GRID[0] // 2) * (GRID[1] // 2)  # 9x7
+        grid = grid or GRID
+        coarse = ((grid[0] + 1) // 2) * ((grid[1] + 1) // 2)  # 9x7 on the 18x14 grid
         c = HEAD_CHANNELS
         # Same construction order as MMPose RTMWHead (matters only for the seeded initialisation).
         self.ps = nn.PixelShuffle(2)
@@ -215,31 +253,81 @@ class Head(nn.Module):
             if isinstance(module, ConvBNReLU):
                 nn.init.kaiming_normal_(module.conv.weight, mode="fan_out", nonlinearity="relu")
 
-    def forward(self, feats):
+    def tokens(self, feats):
+        """-> (N, keypoints, 256) per-keypoint tokens."""
         fine, coarse = feats
         tokens_coarse = self.mlp(torch.flatten(self.final_layer(coarse), 2))
         fine = torch.cat([self.conv_dec(self.ps(coarse)), fine], dim=1)
         tokens_fine = self.mlp2(torch.flatten(self.final_layer2(fine), 2))
-        tokens = self.gau(torch.cat([tokens_coarse, tokens_fine], dim=2))
+        return self.gau(torch.cat([tokens_coarse, tokens_fine], dim=2))
+
+    def classify(self, tokens):
         layers = (self.cls_x, self.cls_y, self.cls_X, self.cls_Y, self.cls_Z) if self.metric else (self.cls_x, self.cls_y)
         return tuple(layer(tokens) for layer in layers)
 
+    def forward(self, feats):
+        return self.classify(self.tokens(feats))
+
 
 class BodyModel(nn.Module):
-    def __init__(self, keypoints=NUM_KEYPOINTS, metric=True, checkpointing=False):
+    def __init__(self, keypoints=NUM_KEYPOINTS, metric=True, checkpointing=False, config=None):
         super().__init__()
-        self.backbone = ViT(checkpointing=checkpointing)
-        self.neck = Neck()
-        self.head = Head(keypoints, metric)
+        self.config = config = config or ModelConfig()
+        width, heads = BACKBONES[config.backbone]
+        self.backbone = ViT(width, heads, config.grid, checkpointing=checkpointing)
+        self.neck = Neck(width)
+        self.head = Head(keypoints, metric, grid=config.grid)
+        if config.rigid:
+            self.shape = nn.Sequential(nn.LayerNorm(256), nn.Linear(256, 128), nn.GELU(), nn.Linear(128, SHAPE_DIM))
+            self.register_buffer("log_template", torch.zeros(len(LENGTHS)))
+            self.register_buffer("basis", torch.zeros(SHAPE_DIM, len(LENGTHS)))
 
     def forward(self, image):
-        """image: (N, 3, 256, 192) normalized RGB -> (x, y, X, Y, Z) logits ((x, y) for the 2D-only model)."""
-        image = F.interpolate(image, size=(GRID[0] * PATCH, GRID[1] * PATCH), mode="bilinear", align_corners=False)
-        return self.head(self.neck(self.backbone(image)))
+        """image: (N, 3, 256, 192) normalized RGB -> (x, y, X, Y, Z) logits ((x, y) for the 2D-only model), plus the
+        shape code for rigid models."""
+        grid = self.config.grid
+        image = F.interpolate(image, size=(grid[0] * PATCH, grid[1] * PATCH), mode="bilinear", align_corners=False)
+        tokens = self.head.tokens(self.neck(self.backbone(image)))
+        logits = self.head.classify(tokens)
+        return logits + (self.shape(tokens.mean(1)),) if self.config.rigid else logits
+
+    def lengths(self, code):
+        """(N, 4) shape code -> (N, 10) bone lengths in metres (LENGTHS order)."""
+        return torch.exp(self.log_template + code @ self.basis)
+
+    def decode(self, outputs):
+        """Outputs -> crop-pixel 2D (N,23,2), 2D confidence (N,23), metres (N,23,3) relative to the hip midpoint for
+        rigid models (in the model's 3D frame: camera axes, or the crop's ray frame)."""
+        xy, score, xyz = decode(outputs[:5])
+        if self.config.rigid:
+            xyz = forward_kinematics(xyz, self.lengths(outputs[5]))
+        return xy, score, xyz
 
 
 def metric_centres(device=None):
     return torch.linspace(-METRIC_RANGE, METRIC_RANGE, METRIC_BINS, device=device)
+
+
+def _unit(v):
+    return v / torch.linalg.vector_norm(v, dim=-1, keepdim=True).clamp_min(1e-6)
+
+
+def forward_kinematics(joints, lengths):
+    """(N,23,3) joints from the X/Y/Z heads, (N,10) lengths -> rigid joints (N,23,3), hip midpoint at the origin: each
+    bone keeps its predicted direction and gets its length; the face points keep their offsets from the neck."""
+    out = [None] * 23
+    hip, neck_joints = (joints[:, 11] + joints[:, 12]) / 2, (joints[:, 5] + joints[:, 6]) / 2
+    length = lambda i: lengths[:, i:i + 1]  # noqa: E731
+    across = _unit(joints[:, 11] - joints[:, 12])
+    out[11], out[12] = across * length(0) / 2, -across * length(0) / 2
+    neck = _unit(neck_joints - hip) * length(1)
+    across = _unit(joints[:, 5] - joints[:, 6])
+    out[5], out[6] = neck + across * length(2) / 2, neck - across * length(2) / 2
+    for parent, child, index in LIMBS:
+        out[child] = out[parent] + _unit(joints[:, child] - joints[:, parent]) * length(index)
+    for k in range(5):
+        out[k] = neck + joints[:, k] - neck_joints
+    return torch.stack(out, 1)
 
 
 def decode(outputs):

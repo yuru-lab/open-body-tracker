@@ -16,23 +16,32 @@ Grey: reference 3D. Colour: obt-body-v0.3.0, one camera, no smoothing.<br>3D err
 
 ## Models
 
-| | **obt-body-v0.3.0** | obt-body-v0.3.0-int8 |
-|---|---:|---:|
-| 3D error, other scenes (Harmony4D, PA-MPJPE) | 71.3 mm | 71.8 mm |
-| 2D accuracy (COCO val2017 AP) | 71.6 | 71.7 |
-| Speed, one person | 6 ms GPU · 103 ms CPU | 46 ms CPU |
+| | **obt-body-v0.4.0-small** (default) | **obt-body-v0.4.0** | obt-body-v0.3.0 |
+|---|---:|---:|---:|
+| 3D error, Harmony4D 06/16 (PA-MPJPE) ¹ | 49.4 mm | **45.2 mm** | — |
+| 3D error, Harmony4D 01/05/15 (PA-MPJPE) | 52.8 mm | **48.9 mm** | 71.3 mm |
+| 3D error, ASPset held-out (PA-MPJPE) | 50.3 mm | **48.1 mm** | 53.7 mm |
+| 2D accuracy (COCO val2017 AP) | 69.9 | **72.8** | 71.6 |
+| Speed, one person: GPU fp16 · CPU int8 | 5 ms · 48 ms | 6 ms · 120 ms | 4 ms · 47 ms |
 
-The INT8 model is the same network quantized for CPUs. Versions, more benchmarks and how they were measured:
-[docs/MODELS.md](docs/MODELS.md).
+¹ Two Harmony4D sequences kept closed until v0.4.0 was fixed, then scored once. Speed: RTX 5080 (PyTorch) and
+Core i5-12600 (ONNX Runtime, 4 threads). v0.4.0-small is the default: about as fast as v0.3.0 and much more
+accurate in 3D. v0.4.0 is the most accurate. Each has an INT8 file for CPUs. All versions, more benchmarks and how
+they were measured: [docs/MODELS.md](docs/MODELS.md).
 
 Next to other models, same frames and same scoring ([details](docs/MODELS.md#other-models-on-the-same-benchmarks)):
 
-| | 3D error, other scenes | 2D AP | Speed, one person |
-|---|---:|---:|---:|
-| **obt-body-v0.3.0** | **71.3 mm** | 71.6 | 6 ms GPU · 46 ms CPU (int8) |
-| MediaPipe Pose Full / Heavy | 103.3 / 105.8 mm | — | 25 / 52 ms CPU |
-| RTMW-m (2D only) | — | 74.1 | 9 ms GPU |
-| SAM 3D Body (our teacher, much larger) | 34.6 mm | — | 115 ms GPU |
+| | 3D error, Harmony4D 06/16 | 3D error, Harmony4D 01/05/15 | 2D AP | Speed, one person |
+|---|---:|---:|---:|---:|
+| **obt-body-v0.4.0** | **45.2 mm** | 48.9 mm | 72.8 | 6 ms GPU · 120 ms CPU (int8) |
+| **obt-body-v0.4.0-small** | 49.4 mm | 52.8 mm | 69.9 | 5 ms GPU · 48 ms CPU (int8) |
+| InstantHMR medium-commercial | 47.1 mm | 40.6 mm ² | — | ~1 ms GPU (published, TensorRT) |
+| MediaPipe Pose Full / Heavy | — | 103.3 / 105.8 mm | — | 25 / 52 ms CPU |
+| RTMW-m (2D only) | — | — | 74.1 | 9 ms GPU |
+| SAM 3D Body (our teacher, much larger) | — | 34.6 mm | — | 115 ms GPU |
+
+² InstantHMR was trained on other recordings of the Harmony4D 01/05/15 sessions (same people and venue); 06/16 are
+new to every model in this table.
 
 ## How it works
 
@@ -51,7 +60,8 @@ mise run demo                    # webcam; models download on first run
 
 ```sh
 uv run obt-demo --image photo.jpg               # writes photo.pose.jpg
-uv run obt-demo --model-version v0.3.0-int8     # faster on a CPU
+uv run obt-demo --model-version v0.4.0-small-int8   # faster on a CPU
+uv run obt-demo --model-version v0.4.0          # the larger, more accurate model
 uv sync --extra gpu && uv run obt-demo --gpu    # CUDA
 ```
 
@@ -72,6 +82,10 @@ pose["score"]  # (23,)   confidence
 pose["xyz"]    # (23, 3) metres, hip-centred, camera axes (x right, y down, z forward)
 ```
 
+v0.4.0 models predict 3D as seen looking straight through the person crop and turn it into camera axes with the
+camera's focal length. Pass it when you know it, `PosePipeline(..., focal=focal_px)` (`obt-demo --focal`); otherwise
+a 65° horizontal field of view is assumed ([geometry.py](src/open_body_tracker/geometry.py)).
+
 Keypoints: COCO 17 + big toe, small toe and heel on each foot ([keypoints.py](src/open_body_tracker/keypoints.py)).
 
 The model always predicts the hips, also when they are out of view (shoulders-up framing, a desk in front), and
@@ -82,7 +96,7 @@ at the hand-off; `pose["origin"]` gives the current weights ([anchor.py](src/ope
 ## More
 
 - [Model versions and benchmarks](docs/MODELS.md) · [Model card](MODEL_CARD.md) · [Training data](DATA.md)
-- [Reproduce the training](docs/REPRODUCE.md): code in [`training/`](training/)
+- [Reproduce the training](docs/REPRODUCE.md): code in [`training/`](training/) (v0.1.0 – v0.3.0)
 
 ## License
 

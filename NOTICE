@@ -7,7 +7,7 @@ are licensed under the Apache License 2.0 (LICENSE). See docs/LICENSING.md for e
 This product includes or adapts the following third-party work:
 
 * DINOv2 (Meta Platforms, Inc.), Apache License 2.0, https://github.com/facebookresearch/dinov2
-  The backbone is a ViT-B/14 initialised from the official DINOv2 weights and trained further.
+  The backbone is a ViT-B/14 (v0.4.0-small: ViT-S/14) initialised from the official DINOv2 weights and trained further.
 
 * MMPose (OpenMMLab), Apache License 2.0, https://github.com/open-mmlab/mmpose
   The pose head (RTMWHead, RTMCCBlock / gated attention unit, ScaleNorm) and the SimCC
@@ -34,6 +34,8 @@ Data:
 * COCO 2014 person keypoints (COCO Consortium), annotations CC BY 4.0; only photos marked CC BY 2.0 are used.
 * Open Images V7 (Google LLC), boxes and metadata CC BY 4.0; only photos marked CC BY 2.0 are used.
 * ASPset-510 (A. Nibali et al.), CC0 1.0, https://github.com/anibali/aspset-510
-  The v0.2.0 / v0.3.0 weights were additionally trained on ASPset-510 3D joints and video frames.
+  The v0.2.0 and later weights were additionally trained on ASPset-510 3D joints and video frames.
+* Harmony4D (R. Khirodkar et al.), MIT License (dataset card), https://huggingface.co/datasets/Jyun-Ting/Harmony4D
+  The v0.4.0 weights were additionally trained on the multi-view 3D and video frames of its training split.
 
 Training images are NOT included. See DATA.md for the datasets, their licences and attribution.

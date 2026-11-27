@@ -1,53 +1,84 @@
 # Models
 
-Every release names its models after the release tag: `obt-body-<tag>[-fp16|-int8]`.
+Every release names its models after the release tag: `obt-body-<tag>[-small][-fp16|-int8]`.
 
 | Model | Files | Default | What it is |
 |---|---|:-:|---|
-| **obt-body-v0.3.0** | `.onnx` (fp32), `-fp16.onnx`, `.safetensors` | ✓ | Same weights as obt-body-v0.2.0 |
-| **obt-body-v0.3.0-int8** | `-int8.onnx` | | v0.3.0 quantized to INT8 for CPU: 2.3× faster, about the same accuracy |
+| **obt-body-v0.4.0-small** | `.onnx` (fp32), `-fp16.onnx`, `.safetensors` | ✓ | ViT-S/14, 29 M parameters. About as fast as v0.3.0, 3D error down by a quarter |
+| **obt-body-v0.4.0-small-int8** | `-int8.onnx` | | v0.4.0-small quantized to INT8 for CPU |
+| **obt-body-v0.4.0** | `.onnx` (fp32), `-fp16.onnx`, `.safetensors` | | ViT-B/14, 96 M parameters. The most accurate; more accurate than InstantHMR medium-commercial on unseen Harmony4D sessions. About 2× slower on CPU |
+| **obt-body-v0.4.0-int8** | `-int8.onnx` | | v0.4.0 quantized to INT8 for CPU |
+| obt-body-v0.3.0 | `.onnx`, `-fp16.onnx`, `.safetensors` | | Same weights as obt-body-v0.2.0 |
+| obt-body-v0.3.0-int8 | `-int8.onnx` | | v0.3.0 quantized to INT8 for CPU |
 | obt-body-v0.2.0 | `.onnx`, `-fp16.onnx`, `.safetensors` | | Stage 2 also learns from the multi-view 3D of 7 [ASPset-510](https://github.com/anibali/aspset-510) (CC0) subjects |
 | obt-body-v0.1.0 | `.onnx`, `-fp16.onnx`, `.safetensors` | | First release |
 
-All models share the architecture, input and outputs. Files released earlier under other names stay downloadable
-with the same contents: `obt-body-v2.*` = v0.2.0, `obt-body-v1.*` = v0.1.0, `obt-h3c.*` = v0.1.0 without the logit
-outputs (no flip test).
+All models take the same input (a 256×192 person crop) and give the same outputs (`xy`, `score`, `xyz` for 23
+keypoints). Files released earlier under other names stay downloadable with the same contents: `obt-body-v2.*` =
+v0.2.0, `obt-body-v1.*` = v0.1.0, `obt-h3c.*` = v0.1.0 without the logit outputs (no flip test).
 
 ```python
 from open_body_tracker.hub import fetch, model_file
-fetch(model_file())                  # models/obt-body-v0.3.0.onnx (default)
-fetch(model_file("v0.3.0-int8"))     # CPU
-fetch(model_file("v0.1.0", fp16=True))
+fetch(model_file())                        # models/obt-body-v0.4.0-small.onnx (default)
+fetch(model_file("v0.4.0"))                # the larger model
+fetch(model_file("v0.4.0-small-int8"))     # CPU
+fetch(model_file("v0.3.0", fp16=True))
 ```
 
-`uv run obt-demo --model-version v0.3.0-int8` and the **Model** menu of the browser demo switch models.
-The browser demo uses v0.3.0 on WebGPU and switches to v0.3.0-int8 on the CPU when WebGPU is not available.
-In a browser INT8 gains less than natively (WASM has no VNNI): about 200 ms per person with several threads
-(Core i5-12600, Chrome), against 285 ms for float32; WebGPU is much faster where available.
+`uv run obt-demo --model-version v0.4.0` and the **Model** menu of the browser demo switch models.
+The browser demo uses v0.4.0-small on WebGPU and switches to the INT8 file of the chosen model on the CPU when
+WebGPU is not available.
 
-![v0.1.0, v0.3.0 and v0.3.0-int8 on the benchmarks](models.png)
+## What changed in v0.4.0
+
+- **3D in the crop's ray frame.** The 3D target is expressed as seen by the camera turned to look straight through
+  the crop centre, so the network does not have to guess where in the image the crop came from (v0.3.0's
+  orientation error grew with the distance from the image centre). The pipeline turns it back into camera axes with
+  the camera's focal length: `PosePipeline(..., focal=...)` / `obt-demo --focal`; when unknown, a 65° horizontal
+  field of view is assumed (`open_body_tracker/geometry.py`). Raw ONNX `xyz` outputs of v0.4.0 are in the ray frame
+  (ONNX metadata `obt.frame = ray`).
+- **Rigid skeleton.** A shape code sets 10 bone lengths (left and right equal); bone directions come from the 3D
+  heads; the joints are rebuilt outwards from the hip midpoint. Bones no longer stretch from frame to frame.
+- **Finer patch grid** (26×20 instead of 18×14) and the **small model** (ViT-S/14).
+- **Training data:** adds multi-view 3D of 11 Harmony4D training sessions (MIT; 02–04, 07–14; none of the evaluation
+  sessions) to the SAM 3D Body teacher labels, COCO and ASPset of earlier releases. The small model also learns from
+  the outputs of a larger obt model (distillation). Details: [MODEL_CARD.md](../MODEL_CARD.md).
+- **Flip test** averages the decoded outputs of the crop and its mirror (the 3D goes through the rigid skeleton).
 
 ## Benchmarks
 
-Each model was scored once per benchmark, with the same code and the same frames for every model. None of the
-benchmark images or subjects were used for training or for choosing a checkpoint. Intervals are 95% bootstrap
-intervals over recordings (ASPset) or recording × camera (Harmony4D).
+Each model was scored with the same code and the same frames for every model. None of the benchmark images or
+recording sessions were used for training. The v0.4.0 recipe was chosen on ASPset held-out and Harmony4D 01/05/15,
+so for v0.4.0 those two are development results; Harmony4D 06/16 stayed closed until both v0.4.0 models were fixed
+and was scored once. Intervals are 95% bootstrap intervals over recordings (ASPset) or recording × camera (Harmony4D).
 
-| | v0.1.0 | v0.3.0 | v0.3.0-int8 |
+| | v0.3.0 | **v0.4.0-small** | **v0.4.0** |
 |---|---:|---:|---:|
-| COCO val2017 keypoint AP, clean (4,737 images) | 71.7 | 71.6 | 71.7 |
-| COCO val2017 keypoint AP, full | 72.7 | 72.6 | 72.9 |
-| ASPset-510 held-out, PA-MPJPE | 67.9 mm | **53.7 mm** | 53.9 mm |
-| ASPset-510 held-out, MPJPE | 92.7 mm | **75.4 mm** | 75.4 mm |
-| Harmony4D test, PA-MPJPE | 76.0 mm | **71.3 mm** | 71.8 mm |
-| Harmony4D test, MPJPE | 130.3 mm | **127.0 mm** | 127.5 mm |
-| Harmony4D test, jitter (acceleration error) | 46.6 mm | 46.9 mm | 48.2 mm |
-| Harmony4D test, 2D error in the 256×192 crop | 8.38 px | 8.45 px | 8.44 px |
-| CPU, ONNX Runtime 1.32, 4 threads (Core i5-12600), batch 1 | 102 ms | 103 ms | **46 ms** |
-| GPU, PyTorch fp16 (RTX 3060 Ti), batch 1 | 5.6 ms | 5.6 ms | — |
+| COCO val2017 keypoint AP, clean (4,737 images) | 71.6 | 69.9 | **72.8** |
+| COCO val2017 keypoint AP, full | 72.6 | 70.7 | **73.9** |
+| ASPset-510 held-out, PA-MPJPE | 53.7 mm | 50.3 mm | **48.1 mm** |
+| ASPset-510 held-out, MPJPE | 75.4 mm | 71.7 mm | **68.0 mm** |
+| Harmony4D test (01, 05, 15), PA-MPJPE | 71.3 mm | 52.8 mm | **48.9 mm** |
+| Harmony4D test (01, 05, 15), MPJPE | 127.0 mm | 73.7 mm | **66.9 mm** |
+| Harmony4D test (01, 05, 15), jitter (acceleration error) ¹ | 44.8 mm | 40.3 mm | **38.3 mm** |
+| Harmony4D test (01, 05, 15), 2D error in the 256×192 crop | 8.45 px | 6.16 px | **5.96 px** |
+| Harmony4D test (06, 16), PA-MPJPE ² | — | 49.4 mm [48.7, 50.2] | **45.2 mm** [44.5, 45.9] |
+| Harmony4D test (06, 16), MPJPE ² | — | 62.5 mm | **57.7 mm** |
+| Harmony4D test (06, 16), jitter ² | — | 41.5 mm | **38.5 mm** |
+| CPU, ONNX Runtime, 4 threads (Core i5-12600), batch 1: fp32 / int8 ³ | 111 / 47 ms | 82 / 48 ms | 248 / 120 ms |
+| GPU, PyTorch, batch 1 (RTX 5080): fp16 / fp32 ⁴ | 3.7 / 7.8 ms | 5.2 / 7.8 ms | 5.5 / 12.7 ms |
 
-The flip test (below) lowers v0.3.0's Harmony4D PA-MPJPE to 70.0 mm and jitter to 43.4 mm, and raises COCO clean
-AP to 72.1, at twice the time.
+¹ Measured on the frame triples where MediaPipe also found the person (the comparison set below); v0.3.0 was
+listed with 46.9 mm on all triples before.
+² Two more Harmony4D test sequences (06_sword3, 16_mma5; 48,280 crops, jitter on all 48,184 triples), kept
+closed until the v0.4.0 candidates were fixed and scored once. Not run with v0.3.0.
+³ Measured together, on a machine that was also running other work; v0.3.0 was listed with 103 / 46 ms before.
+⁴ Including the decoding (rigid skeleton) on the GPU. At batch 1 the time is dominated by the number of GPU kernel
+launches rather than by arithmetic, so the smaller network gains little here; on the RTX 3060 Ti v0.3.0 took
+5.6 / 8.8 ms.
+
+With the flip test, v0.4.0 improves to PA-MPJPE 47.7 mm (ASPset), 48.6 mm (Harmony4D 01/05/15) and 44.6 mm
+(06/16), and jitter to 35.9 / 36.3 mm; v0.4.0-small to 48.9 mm PA-MPJPE and 38.9 mm jitter on 06/16.
 
 ### The benchmarks
 
@@ -57,9 +88,11 @@ AP to 72.1, at twice the time.
   every 5th frame (3,877 frames). v0.2.0 / v0.3.0 never saw them, but were trained on 7 other people filmed in the
   same studio, so the gain here is larger than you should expect elsewhere.
 - **Harmony4D test** ([dataset](https://huggingface.co/datasets/Jyun-Ting/Harmony4D), MIT on the dataset card):
-  3 sequences (hugging, sword fighting, MMA) of two people in close contact, indoors and outdoors, 20–22 fisheye
-  GoPros. Never used for training. Raw (distorted) frames cropped around the ground-truth boxes, as at run time.
-  Accuracy: every 5th frame of every camera (26,474 crops). Jitter: every frame of 4 cameras (26,176 triples).
+  sequences of two people in close contact, indoors and outdoors, 20–22 fisheye GoPros: 01_hugging, 05_sword2 and
+  15_mma4 (used since v0.1.0), and 06_sword3 and 16_mma5 (opened once for v0.4.0). Raw (distorted) frames cropped
+  around the ground-truth boxes, as at run time. Accuracy: every 5th frame of every camera (26,474 crops for
+  01/05/15). Jitter: every frame of 4 cameras. v0.4.0 is trained on 11 other Harmony4D sessions (training split,
+  02–04 and 07–14), so the camera rig and capture style are familiar to it, but none of these recordings are.
 
 3D is scored on 12 body points (shoulders to ankles), hip-centred. PA-MPJPE aligns rotation and scale first;
 MPJPE keeps the camera axes.
@@ -80,18 +113,24 @@ int8 − float32: ASPset PA-MPJPE +0.18 mm [0.07, 0.29], Harmony4D PA-MPJPE +0.5
 +1.28 mm [1.05, 1.52]. All five release checks fixed beforehand passed (3D and jitter within +2 mm, COCO AP drop
 below 1 point, at most 60% of the float32 time).
 
+v0.4.0 and v0.4.0-small are quantized the same way (the shape head also stays float32). Paired difference on ASPset,
+int8 − float32: PA-MPJPE +0.2 mm for both ([0.1, 0.3] for v0.4.0-small, [0.2, 0.3] for v0.4.0).
+
 INT8 helps on CPU only. On a GPU use the fp16 or fp32 file.
 
 ## Other models on the same benchmarks
 
 For reference, other public models were run once on the same frames and scored with the same code.
 
-![obt-body against MediaPipe, RTMW and SAM 3D Body](reference-comparison.png)
+![obt-body-v0.3.0 against MediaPipe, RTMW and SAM 3D Body (chart made for v0.3.0; the table below includes v0.4.0)](reference-comparison.png)
 
 | | ASPset PA-MPJPE | Harmony4D PA-MPJPE | Harmony4D jitter | 2D error (crop px) | COCO AP clean |
 |---|---:|---:|---:|---:|---:|
-| **obt-body-v0.3.0** | **53.7 mm** | **71.3 mm** | **44.8 mm** | 8.45 | 71.6 |
+| **obt-body-v0.4.0** | **48.1 mm** | 48.9 mm | 38.3 mm | 5.96 | 72.8 |
+| **obt-body-v0.4.0-small** | 50.3 mm | 52.8 mm | 40.3 mm | 6.16 | 69.9 |
+| obt-body-v0.3.0 | 53.7 mm | 71.3 mm | 44.8 mm | 8.45 | 71.6 |
 | obt-body-v0.3.0-int8 | 53.9 mm | 71.8 mm | 46.0 mm | 8.44 | 71.7 |
+| InstantHMR medium-commercial ⁴ | 64.9 mm | 40.6 mm | 35.6 mm | 5.91 | — |
 | MediaPipe Pose Landmarker Lite | 92.9 mm | 110.5 mm | 92.7 mm | 14.4 ¹ | — |
 | MediaPipe Pose Landmarker Full | 87.8 mm | 103.3 mm | 88.4 mm | 13.5 ¹ | — |
 | MediaPipe Pose Landmarker Heavy | 92.3 mm | 105.8 mm | 80.7 mm | 12.8 ¹ | — |
@@ -128,13 +167,22 @@ How each model was run:
 - ³ **SAM 3D Body** ([Meta](https://github.com/facebookresearch/sam-3d-body)) sees the whole image and is a much
   larger model. Its predictions are the training labels of obt-body, so it is an upper reference, not a competitor.
 
+- ⁴ **InstantHMR medium-commercial** (fit 0, its better setting here; SAM License), ONNX, on the same crops. It
+  was trained on other recordings of the same three Harmony4D sessions (same people, venue and cameras), so
+  Harmony4D 01/05/15 is familiar ground for it. On the two sessions it has not seen (06, 16) it scores PA-MPJPE
+  47.1 mm [46.2, 48.0], MPJPE 67.0 mm and jitter 43.7 mm, against 45.2 mm, 57.7 mm and 38.5 mm for v0.4.0
+  (paired PA-MPJPE difference −1.9 mm [−2.4, −1.4]) and 49.4 mm, 62.5 mm and 41.5 mm for v0.4.0-small
+  (+2.4 mm [1.8, 2.9]). Its own published speed is about 1 ms (RTX 4070, TensorRT); we did not time it.
+
 None of these are claims about the other models in general: one run, on these benchmarks and this crop setup.
 
 ## Flip test
 
-The flip test runs the crop and its mirror image together, averages the classifier outputs (mirror's left and
-right points swapped, x bins reversed) and then decodes. It lowers the 3D error by about 1 mm and the jitter by
-3.5 mm (v0.3.0: −3.5 mm [−4.1, −3.0]). It is off by default because it doubles the pose-model time.
+The flip test runs the crop and its mirror image together and averages the two predictions, the mirror's left and
+right points swapped. Up to v0.3.0 it averages the classifier outputs (x bins reversed) and then decodes; v0.4.0
+averages the decoded outputs (x mirrored), because the 3D goes through the rigid skeleton. It lowers the 3D error by
+about 0.5–1 mm and the jitter by 2–3.5 mm (v0.3.0: −3.5 mm [−4.1, −3.0]; v0.4.0: −2.4 mm [−3.1, −1.9] on
+Harmony4D 01/05/15). It is off by default because it doubles the pose-model time.
 
 - Python: `PosePipeline(..., flip=True)`, `obt-demo --flip`, or `open_body_tracker.flip.run(session, crops)`.
 - Browser demo: **Flip test → on**.

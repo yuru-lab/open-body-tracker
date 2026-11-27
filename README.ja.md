@@ -16,22 +16,31 @@
 
 ## モデル
 
-| | **obt-body-v0.3.0** | obt-body-v0.3.0-int8 |
-|---|---:|---:|
-| 3D誤差・別の環境（Harmony4D、PA-MPJPE） | 71.3 mm | 71.8 mm |
-| 2D精度（COCO val2017 AP） | 71.6 | 71.7 |
-| 速度（1人） | GPU 6 ms · CPU 103 ms | CPU 46 ms |
+| | **obt-body-v0.4.0-small**（標準） | **obt-body-v0.4.0** | obt-body-v0.3.0 |
+|---|---:|---:|---:|
+| 3D誤差・Harmony4D 06/16（PA-MPJPE）¹ | 49.4 mm | **45.2 mm** | — |
+| 3D誤差・Harmony4D 01/05/15（PA-MPJPE） | 52.8 mm | **48.9 mm** | 71.3 mm |
+| 3D誤差・ASPset（学習に使っていない3人、PA-MPJPE） | 50.3 mm | **48.1 mm** | 53.7 mm |
+| 2D精度（COCO val2017 AP） | 69.9 | **72.8** | 71.6 |
+| 速度（1人）：GPU fp16 · CPU int8 | 5 ms · 48 ms | 6 ms · 120 ms | 4 ms · 47 ms |
 
-INT8版は同じモデルをCPU向けに軽くしたものです。版の一覧やほかの評価、測り方は [docs/MODELS.md](docs/MODELS.md)（英語）にあります。
+¹ v0.4.0を確定するまで開けずにおき、確定後に一度だけ採点したHarmony4Dの2系列。速度はRTX 5080（PyTorch）と
+Core i5-12600（ONNX Runtime、4スレッド）。標準のv0.4.0-smallはv0.3.0とほぼ同じ速さで、3Dはずっと正確です。
+いちばん正確なのはv0.4.0です。どちらにもCPU向けのINT8版があります。版の一覧やほかの評価、測り方は
+[docs/MODELS.md](docs/MODELS.md)（英語）にあります。
 
 ほかのモデルとの比較（同じフレーム・同じ採点、[詳細](docs/MODELS.md#other-models-on-the-same-benchmarks)）：
 
-| | 3D誤差・別の環境 | 2D AP | 速度（1人） |
-|---|---:|---:|---:|
-| **obt-body-v0.3.0** | **71.3 mm** | 71.6 | GPU 6 ms · CPU 46 ms（int8） |
-| MediaPipe Pose Full / Heavy | 103.3 / 105.8 mm | — | CPU 25 / 52 ms |
-| RTMW-m（2Dのみ） | — | 74.1 | GPU 9 ms |
-| SAM 3D Body（学習ラベルの元、ずっと大きいモデル） | 34.6 mm | — | GPU 115 ms |
+| | 3D誤差・Harmony4D 06/16 | 3D誤差・Harmony4D 01/05/15 | 2D AP | 速度（1人） |
+|---|---:|---:|---:|---:|
+| **obt-body-v0.4.0** | **45.2 mm** | 48.9 mm | 72.8 | GPU 6 ms · CPU 120 ms（int8） |
+| **obt-body-v0.4.0-small** | 49.4 mm | 52.8 mm | 69.9 | GPU 5 ms · CPU 48 ms（int8） |
+| InstantHMR medium-commercial | 47.1 mm | 40.6 mm ² | — | GPU 約1 ms（公表値、TensorRT） |
+| MediaPipe Pose Full / Heavy | — | 103.3 / 105.8 mm | — | CPU 25 / 52 ms |
+| RTMW-m（2Dのみ） | — | — | 74.1 | GPU 9 ms |
+| SAM 3D Body（学習ラベルの元、ずっと大きいモデル） | — | 34.6 mm | — | GPU 115 ms |
+
+² InstantHMRはHarmony4D 01/05/15と同じセッションの別の録画（同じ人・同じ会場）で学習しています。06/16はこの表のどのモデルにとっても初めて見る録画です。
 
 ## しくみ
 
@@ -49,7 +58,8 @@ mise run demo                    # Webカメラ。初回にモデルをダウン
 
 ```sh
 uv run obt-demo --image photo.jpg               # photo.pose.jpg を書き出す
-uv run obt-demo --model-version v0.3.0-int8     # CPUで速い
+uv run obt-demo --model-version v0.4.0-small-int8   # CPUで速い
+uv run obt-demo --model-version v0.4.0          # 大きく、より正確なモデル
 uv sync --extra gpu && uv run obt-demo --gpu    # CUDA
 ```
 
@@ -70,6 +80,10 @@ pose["score"]  # (23,)   自信度
 pose["xyz"]    # (23, 3) メートル、腰の中心が原点、カメラの軸（x右・y下・z奥）
 ```
 
+v0.4.0のモデルは、切り抜きの中心をまっすぐ見た向きで3Dを出し、カメラの焦点距離を使ってカメラの軸に直します。
+焦点距離がわかるときは `PosePipeline(..., focal=焦点距離px)`（`obt-demo --focal`）で渡してください。
+渡さないときは水平画角65°のカメラとみなします（[geometry.py](src/open_body_tracker/geometry.py)）。
+
 点はCOCOの17点＋左右の足の親指・小指・かかとです（[keypoints.py](src/open_body_tracker/keypoints.py)）。
 
 モデルは腰が写っていないとき（肩までの構図、机の向こうなど）も腰を推定するので、その推定の揺れで3D全体が揺れます。
@@ -79,7 +93,7 @@ pose["xyz"]    # (23, 3) メートル、腰の中心が原点、カメラの軸�
 ## もっと知る
 
 - [モデルの版と評価](docs/MODELS.md) · [モデルカード](MODEL_CARD.md) · [学習データ](DATA.md)（英語）
-- [学習の再現](docs/REPRODUCE.md)：コードは [`training/`](training/)
+- [学習の再現](docs/REPRODUCE.md)：コードは [`training/`](training/)（v0.1.0〜v0.3.0）
 
 ## ライセンス
 
