@@ -9,6 +9,11 @@
   <a href="docs/MODELS.md">評価</a>
 </p>
 
+<p align="center"><img src="docs/sample-aspset.gif" alt="映像上の2D骨格と、正解と並べた3Dの予測" width="800"></p>
+
+<p align="center"><sub>学習に一度も使っていない人の映像（<a href="https://github.com/anibali/aspset-510">ASPset-510</a>、CC0）。
+グレーが正解の3D、色がobt-body-v0.4.0-small（カメラ1台、平滑化なし）。<br>3D誤差（PA-MPJPE）はこのクリップで59 mm、ASPsetの評価用クリップ全体で平均50.3 mmです。</sub></p>
+
 ## モデル
 
 | | **obt-body-v0.4.0-small**（標準） | **obt-body-v0.4.0** | obt-body-v0.3.0 |
