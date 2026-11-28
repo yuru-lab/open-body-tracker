@@ -6,6 +6,7 @@
     uv run obt-demo --model-version v0.4.0-small-int8   # faster on CPUs; v0.4.0 = larger, more accurate
     uv run obt-demo --flip                         # flip test (about 2x slower, a little steadier)
     uv run obt-demo --anchor                       # 3D origin follows the visible body (shoulders-up framing)
+    uv run obt-demo --hands                        # also 21 points per hand (v0.5.0 models)
 """
 import argparse
 import math
@@ -16,11 +17,13 @@ import cv2
 import numpy as np
 
 from .detector import PersonDetector
-from .hub import ALIASES, DEFAULT_MODEL, MODELS, fetch, model_file
+from .hands import EDGES as HAND_EDGES
+from .hub import ALIASES, DEFAULT_MODEL, HAND_MODELS, MODELS, fetch, hand_model_file, model_file
 from .keypoints import EDGES
 from .pipeline import PosePipeline
 
 LEFT, RIGHT, CENTRE = (235, 140, 40), (40, 140, 245), (200, 200, 200)  # BGR: blue = left, orange = right
+HAND_COLOURS = {"right": (90, 190, 255), "left": (255, 190, 90)}
 DRAW_SCORE = 3.0  # joints in view score about 6, joints out of view under 2
 
 
@@ -36,6 +39,10 @@ def draw_2d(frame, pose):
     for a, b in EDGES:
         if min(pose["score"][a], pose["score"][b]) >= DRAW_SCORE:
             cv2.line(frame, tuple(map(int, pose["xy"][a])), tuple(map(int, pose["xy"][b])), colour(a, b), 2, cv2.LINE_AA)
+    for side, hand in (pose.get("hands") or {}).items():
+        if hand is not None:
+            for a, b in HAND_EDGES:
+                cv2.line(frame, tuple(map(int, hand["xy"][a])), tuple(map(int, hand["xy"][b])), HAND_COLOURS[side], 1, cv2.LINE_AA)
 
 
 def draw_3d(size, pose, angle):
@@ -47,6 +54,11 @@ def draw_3d(size, pose, angle):
     for a, b in EDGES:
         if a >= 5 and b >= 5:  # body and feet only
             cv2.line(view, tuple(points[a]), tuple(points[b]), colour(a, b), 2, cv2.LINE_AA)
+    for side, hand in (pose.get("hands") or {}).items():
+        if hand is not None:
+            p = (hand["xyz"] @ np.array([[c, 0, -s], [0, 1, 0], [s, 0, c]], np.float32).T)[:, :2] * size / 2.4 + size / 2
+            for a, b in HAND_EDGES:
+                cv2.line(view, tuple(p[a].astype(int)), tuple(p[b].astype(int)), HAND_COLOURS[side], 1, cv2.LINE_AA)
     return view
 
 
@@ -65,14 +77,16 @@ def main():
                         help="3D origin follows the visible body (hips, else shoulders, else face): steadier when only "
                              "the upper body is in view")
     parser.add_argument("--focal", type=float,
-                        help="camera focal length in pixels (v0.4.0 models; default: 65-degree horizontal field of view)")
+                        help="camera focal length in pixels (v0.4.0 and later; default: 65-degree horizontal field of view)")
+    parser.add_argument("--hands", action="store_true", help=f"also track the hands (model versions {', '.join(HAND_MODELS)})")
     args = parser.parse_args()
 
     providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if args.gpu else ["CPUExecutionProvider"]
     detector = PersonDetector(fetch(f"yolox_{args.detector}.onnx"))
+    hand_model = fetch(hand_model_file(args.model_version)) if args.hands else None
     pipeline = PosePipeline(args.model or fetch(model_file(args.model_version)), detector, providers,
                             track=not args.no_track and not args.image, flip=args.flip, anchor=args.anchor,
-                            focal=args.focal)
+                            focal=args.focal, hand_model=hand_model)
 
     if args.image:
         frame = cv2.imread(str(args.image))

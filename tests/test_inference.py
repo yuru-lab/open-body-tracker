@@ -49,7 +49,7 @@ def test_ray_to_camera():
     np.testing.assert_allclose(ray_to_camera(np.array([0, 0, 1.0]), inverse, 640, 480), ray / np.linalg.norm(ray), atol=1e-6)
 
 
-@pytest.mark.parametrize("name", ["obt-body-v0.1.0", "obt-body-v0.3.0", "obt-body-v0.4.0-small", "obt-body-v0.4.0"])
+@pytest.mark.parametrize("name", ["obt-body-v0.1.0", "obt-body-v0.3.0", "obt-body-v0.4.0-small", "obt-body-v0.4.0", "obt-body-v0.5.0-small"])
 def test_onnx_matches_pytorch(name):
     if not (MODELS / f"{name}.safetensors").exists() or not (MODELS / f"{name}.onnx").exists():
         pytest.skip(f"needs models/{name}.safetensors and models/{name}.onnx")
@@ -92,11 +92,15 @@ def test_flip_test_matches_logit_average():
 
 
 def test_model_names():
-    from open_body_tracker.hub import FILES, MODELS, model_file
-    assert model_file() == "obt-body-v0.4.0-small.onnx" and model_file("v0.4.0", fp16=True) == "obt-body-v0.4.0-fp16.onnx"
+    from open_body_tracker.hub import FILES, HAND_MODELS, MODELS, hand_model_file, model_file
+    assert model_file() == "obt-body-v0.5.0-small.onnx" and model_file("v0.4.0", fp16=True) == "obt-body-v0.4.0-fp16.onnx"
+    assert hand_model_file() == "obt-hand-v0.5.0-small.onnx" and hand_model_file(fp16=True) == "obt-hand-v0.5.0-small-fp16.onnx"
+    assert all(v in MODELS and hand_model_file(v) in FILES for v in HAND_MODELS)
+    with pytest.raises(ValueError):
+        hand_model_file("v0.4.0-small")
     assert model_file("v2", fp16=True) == "obt-body-v0.2.0-fp16.onnx" and model_file("v0.4.0-small-int8") == "obt-body-v0.4.0-small-int8.onnx"
     assert model_file("v1") == "obt-body-v0.1.0.onnx" and model_file("v0.3.0-int8") == "obt-body-v0.3.0-int8.onnx"
-    for int8 in ("v0.3.0-int8", "v0.4.0-small-int8"):
+    for int8 in ("v0.3.0-int8", "v0.4.0-small-int8", "v0.5.0-small-int8"):
         with pytest.raises(ValueError):
             model_file(int8, fp16=True)
     assert all(model_file(v) in FILES for v in MODELS)
@@ -144,3 +148,63 @@ def test_flip_test_averages_outputs_for_v040():
     fxy, _, fxyz = flip.run(session, crops.transpose(0, 3, 1, 2).astype(np.float32))
     assert np.mean(np.abs(fxy - xy) < 1) > 0.99
     assert np.abs(fxyz - xyz).max() < 1e-3
+
+
+def test_hand_crop_geometry():
+    """The hand crop is a square of 2.0 x the hand's extent around its box centre, 140 x 140 pixels."""
+    from open_body_tracker.hands import EDGES, INPUT, NAMES, WRIST, hand_affine
+    assert len(NAMES) == 21 and NAMES[WRIST] == "wrist" and NAMES[0] == "thumb_tip" and NAMES[19] == "pinky_mcp"
+    assert all(0 <= a < 21 and 0 <= b < 21 for a, b in EDGES) and len(EDGES) == 20
+    points = np.array([[100.0, 200.0], [150.0, 220.0], [120.0, 260.0]])
+    matrix = hand_affine(np.vstack([points, points.mean(0)[None].repeat(18, 0)]))
+    np.testing.assert_allclose(np.array([125, 230]) @ matrix[:, :2].T + matrix[:, 2], [INPUT / 2, INPUT / 2], atol=1e-4)
+    assert matrix[0, 0] == pytest.approx(INPUT / (2.0 * 60))
+
+
+def test_hand_model_matches_pytorch():
+    """obt-hand ONNX == the PyTorch hand pass; the body rows of a hand model == the same weights without hand rows."""
+    weights, hand = MODELS / "obt-body-v0.5.0-small.safetensors", MODELS / "obt-hand-v0.5.0-small.onnx"
+    if not weights.exists() or not hand.exists():
+        pytest.skip("needs models/obt-body-v0.5.0-small.safetensors and models/obt-hand-v0.5.0-small.onnx")
+    torch = pytest.importorskip("torch")
+    import dataclasses
+    import onnxruntime as ort
+    from open_body_tracker.model import BodyModel, decode_hand
+    from open_body_tracker.preprocess import normalize
+    from open_body_tracker.weights import load_model
+    model = load_model(weights)
+    crops = np.random.default_rng(3).integers(0, 256, (2, 140, 140, 3), dtype=np.uint8)
+    with torch.inference_mode():
+        xy, _, xyz = (v.numpy() for v in decode_hand(model.hands(torch.from_numpy(normalize(crops)))))
+    session = ort.InferenceSession(str(hand), providers=["CPUExecutionProvider"])
+    oxy, _, oxyz = session.run(["xy", "score", "xyz"], {"crop": crops.transpose(0, 3, 1, 2).astype(np.float32)})
+    assert np.mean(np.abs(oxy - xy) < 1) > 0.99 and np.abs(oxyz - xyz).max() < 1e-3
+    assert np.abs(xyz[:, -1]).max() < 1e-6  # wrist-relative
+    body = BodyModel(config=dataclasses.replace(model.config, hands=False))
+    state = {k: v for k, v in model.state_dict().items() if not k.startswith("hand2.")}
+    for key in [k for k in state if k.startswith(("head.final_layer.", "head.final_layer2.")) and state[k].shape[:1] == (65,)]:
+        state[key] = state[key][:23]
+    body.load_state_dict(state, strict=False)
+    body.eval()
+    people = torch.from_numpy(normalize(np.random.default_rng(4).integers(0, 256, (2, 256, 192, 3), dtype=np.uint8)))
+    with torch.inference_mode():
+        a, b = model.decode(model(people)), body.decode(body(people))
+    assert (a[0] == b[0]).all() and (a[2] - b[2]).abs().max() < 1e-5
+
+
+def test_pipeline_with_hands():
+    """End to end on a blank frame with a fixed person box: both hands come back with 21 points each."""
+    body, hand = MODELS / "obt-body-v0.5.0-small.onnx", MODELS / "obt-hand-v0.5.0-small.onnx"
+    if not body.exists() or not hand.exists():
+        pytest.skip("needs models/obt-body-v0.5.0-small.onnx and models/obt-hand-v0.5.0-small.onnx")
+    from open_body_tracker.pipeline import PosePipeline
+    pipeline = PosePipeline(body, lambda rgb: [200, 40, 240, 400], track=False, hand_model=hand)
+    pipeline.hands.min_wrist_score = -1e9  # a blank frame has no confident wrist; force both hands through
+    rgb = np.random.default_rng(5).integers(0, 256, (480, 640, 3), dtype=np.uint8)
+    pose = pipeline(rgb, now=0.0)
+    for side in ("right", "left"):
+        h = pose["hands"][side]
+        assert h["xy"].shape == (21, 2) and h["score"].shape == (21,) and h["xyz"].shape == (21, 3)
+        np.testing.assert_allclose(h["xyz"][-1], pose["xyz"][{"right": 10, "left": 9}[side]], atol=1e-5)
+    with pytest.raises(ValueError):
+        PosePipeline(MODELS / "obt-body-v0.4.0-small.onnx", lambda rgb: None, hand_model=hand)

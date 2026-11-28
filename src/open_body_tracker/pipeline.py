@@ -7,6 +7,7 @@ import onnxruntime as ort
 from . import flip as flip_test
 from .anchor import BodyAnchor
 from .geometry import ray_to_camera
+from .hands import HandPass
 from .keypoints import HIPS
 from .preprocess import crop
 from .smoothing import OneEuro
@@ -39,13 +40,21 @@ class BoxTracker:
 
 class PosePipeline:
     def __init__(self, model_path, detector, providers=None, track=True, smoothing=True, flip=False, anchor=False,
-                 focal=None):
+                 focal=None, hand_model=None):
         """anchor=True: the 3D origin follows the visible body (hips, else shoulders, else face; see anchor.py)
         instead of always being the hips, which are guessed when out of view.
-        focal: the camera's focal length in pixels, used by v0.4.0 models to turn their 3D from the crop's ray frame
-        into camera axes (None: a 65-degree horizontal field of view is assumed; see geometry.py)."""
+        focal: the camera's focal length in pixels, used by v0.4.0 and later models to turn their 3D from the crop's
+        ray frame into camera axes (None: a 65-degree horizontal field of view is assumed; see geometry.py).
+        hand_model: an obt-hand-*.onnx file, used with the person model of the same release (v0.5.0); adds "hands"
+        to the result (see hands.py)."""
         self.session = ort.InferenceSession(str(model_path), providers=providers or ["CPUExecutionProvider"])
         self.ray_frame = self.session.get_modelmeta().custom_metadata_map.get("obt.frame") == "ray"
+        self.hands = None
+        if hand_model is not None:
+            if "hand_xy" not in {o.name for o in self.session.get_outputs()}:
+                raise ValueError(f"{model_path} has no hand rows; hand models need a person model of the same release (v0.5.0)")
+            hand_session = ort.InferenceSession(str(hand_model), providers=providers or ["CPUExecutionProvider"])
+            self.hands = HandPass(hand_session, smoothing=smoothing)
         self.focal = focal
         if flip and not set(flip_test.LOGITS) <= {o.name for o in self.session.get_outputs()}:
             raise ValueError(f"{model_path} has no logit outputs; the flip test needs an obt-body-v0.x.x model (not obt-h3c.onnx)")
@@ -57,7 +66,9 @@ class PosePipeline:
 
     def __call__(self, rgb, now=None):
         """-> dict(box, xy (23,2) image px, score (23,), xyz (23,3) metres, hip-centred) or None.
-        With anchor=True, xyz is relative to the blended origin and "origin" holds its (hips, shoulders, face) weights."""
+        With anchor=True, xyz is relative to the blended origin and "origin" holds its (hips, shoulders, face) weights.
+        With a hand model, "hands" holds {"right": ..., "left": ...}, each None or dict(xy (21,2), score (21,),
+        xyz (21,3) in the same frame as xyz, box); point order: open_body_tracker.hands.NAMES."""
         now = time.monotonic() if now is None else now
         height, width = rgb.shape[:2]
         if self.tracker is None or self.tracker.needs_detection(now):
@@ -73,13 +84,16 @@ class PosePipeline:
                     f.reset()
             if self.anchor is not None:
                 self.anchor.reset()
+            if self.hands is not None:
+                self.hands.reset()
             return None
         patch, inverse = crop(rgb, box)
         crops = patch.transpose(2, 0, 1)[None].astype(np.float32)
+        extra = ["hand_xy"] if self.hands is not None else []
         if self.flip:
-            xy, score, xyz = flip_test.run(self.session, crops)
+            xy, score, xyz, *hand_xy = flip_test.run(self.session, crops, extra)
         else:
-            xy, score, xyz = self.session.run(["xy", "score", "xyz"], {"crop": crops})
+            xy, score, xyz, *hand_xy = self.session.run(["xy", "score", "xyz", *extra], {"crop": crops})
         xy = xy[0] @ inverse[:, :2].T + inverse[:, 2]
         score, xyz = score[0], xyz[0]
         if self.ray_frame:
@@ -92,6 +106,9 @@ class PosePipeline:
         if self.filters:
             xy, xyz = self.filters["xy"](xy, now), self.filters["xyz"](xyz, now)
         pose = dict(box=box, box_source=source, xy=xy, score=score, xyz=xyz)
+        if self.hands is not None:
+            points = hand_xy[0][0] @ inverse[:, :2].T + inverse[:, 2]
+            pose["hands"] = self.hands(rgb, points, score, xyz, self.focal, now)
         if self.anchor is not None:
             pose["origin"] = dict(zip(("hips", "shoulders", "face"), self.anchor.weights.tolist()))
         return pose

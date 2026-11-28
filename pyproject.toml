@@ -1,6 +1,6 @@
 [project]
 name = "open-body-tracker"
-version = "0.3.0"
+version = "0.5.0"
 description = "Lightweight single-camera full-body 3D pose estimation (23 keypoints, metric 3D)"
 readme = "README.md"
 license = "Apache-2.0"

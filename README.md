@@ -4,6 +4,7 @@
 
 <p align="center">
   Full-body 3D pose from one RGB camera: 23 keypoints in 2D and in metres, in real time.<br>
+  New in v0.5.0: 21 points per hand (beta).<br>
   <a href="https://yuru-lab.github.io/open-body-tracker/"><b>Browser demo (v0.4.0-small)</b></a> ·
   <a href="https://huggingface.co/Yurup/open-body-tracker">Models (Hugging Face)</a> ·
   <a href="docs/MODELS.md">Benchmarks</a>
@@ -16,24 +17,28 @@ Grey: reference 3D. Colour: obt-body-v0.4.0-small, one camera, ASPset person box
 
 ## Models
 
-| | **obt-body-v0.4.0-small** (default) | **obt-body-v0.4.0** | obt-body-v0.3.0 |
+| | **obt-body-v0.5.0-small** (default) | **obt-body-v0.4.0** | obt-body-v0.4.0-small |
 |---|---:|---:|---:|
-| 3D error, Harmony4D 06/16 (PA-MPJPE) ¹ | 49.4 mm | **45.2 mm** | — |
-| 3D error, Harmony4D 01/05/15 (PA-MPJPE) | 52.8 mm | **48.9 mm** | 71.3 mm |
-| 3D error, ASPset held-out (PA-MPJPE) | 50.3 mm | **48.1 mm** | 53.7 mm |
-| 2D accuracy (COCO val2017 clean AP) | 69.9 | **72.8** | 71.6 |
-| Speed, one person: GPU fp16 · CPU int8 | 5 ms · 48 ms | 6 ms · 120 ms | 4 ms · 47 ms |
+| Hands | 21 points per hand (beta) | — | — |
+| 3D error, Harmony4D 06/16 (PA-MPJPE) ¹ | 48.8 mm | **45.2 mm** | 49.4 mm |
+| 3D error, Harmony4D 01/05/15 (PA-MPJPE) | 52.1 mm | **48.9 mm** | 52.8 mm |
+| 3D error, ASPset held-out (PA-MPJPE) | 50.1 mm | **48.1 mm** | 50.3 mm |
+| 2D accuracy (COCO val2017 clean AP) | 69.1 | **72.8** | 69.9 |
+| Speed, one person: GPU fp16 · CPU int8 | 5 ms · 52 ms (+ hands 3 ms · 17 ms) | 6 ms · 120 ms | 5 ms · 48 ms |
 
-¹ Two Harmony4D sequences kept closed until v0.4.0 was fixed, then scored once. Speed: RTX 5080 (PyTorch) and
-Core i5-12600 (ONNX Runtime, 4 threads). v0.4.0-small is the default: about as fast as v0.3.0 and much more
-accurate in 3D. v0.4.0 is the most accurate. Each has an INT8 file for CPUs. All versions, more benchmarks and how
-they were measured: [docs/MODELS.md](docs/MODELS.md).
+¹ Two Harmony4D sequences kept closed until v0.4.0 was fixed, then scored once per release. Speed: RTX 5080
+(PyTorch) and Core i5-12600 (ONNX Runtime, 4 threads). v0.5.0-small is the default: v0.4.0-small trained further
+together with the new hand model, a little better in 3D and 0.8 lower in COCO AP. v0.4.0 is the most accurate body
+model (no hands). Each has an INT8 file for CPUs. The hands have no published accuracy numbers yet
+([why](docs/MODELS.md#hands-beta)). All versions, more benchmarks and how they were measured:
+[docs/MODELS.md](docs/MODELS.md).
 
 Next to other models, same frames and same scoring ([details](docs/MODELS.md#other-models-on-the-same-benchmarks)):
 
 | | 3D error, Harmony4D 06/16 | 3D error, Harmony4D 01/05/15 | COCO val2017 clean AP | Speed, one person |
 |---|---:|---:|---:|---:|
 | **obt-body-v0.4.0** | **45.2 mm** | 48.9 mm | 72.8 | 6 ms GPU · 120 ms CPU (int8) |
+| **obt-body-v0.5.0-small** | 48.8 mm | 52.1 mm | 69.1 | 5 ms GPU · 52 ms CPU (int8) |
 | **obt-body-v0.4.0-small** | 49.4 mm | 52.8 mm | 69.9 | 5 ms GPU · 48 ms CPU (int8) |
 | InstantHMR medium-commercial | 47.1 mm | 40.6 mm ² | — | ~1 ms GPU (published, TensorRT) |
 | MediaPipe Pose Full / Heavy | — | 103.3 / 105.8 mm | — | 25 / 52 ms CPU |
@@ -41,13 +46,14 @@ Next to other models, same frames and same scoring ([details](docs/MODELS.md#oth
 | SAM 3D Body (our teacher, much larger) | — | 34.6 mm | — | 115 ms GPU |
 
 ² InstantHMR was trained on other recordings of the Harmony4D 01/05/15 sessions (same people and venue).
-Harmony4D 06/16 were held out for both obt-body v0.4.0 models and InstantHMR.
+Harmony4D 06/16 were held out for the obt-body models and InstantHMR.
 
 ## How it works
 
 YOLOX finds the person and refreshes the detection about once per second or when tracking is lost. Between
 detections, the previous pose supplies the box for the next frame. The pose model takes a 256 × 192 crop,
-and a One Euro filter smooths the result.
+and a One Euro filter smooths the result. With the hands on, the pose model also gives rough hand points; each hand
+is cut out at 140 × 140 and the hand model (the same backbone with its own head) finds 21 points in it.
 
 <p align="center"><img src="docs/architecture.svg" alt="v0.4.0 pose model with a DINOv2 backbone, keypoint and shape heads, and rigid 3D skeleton decoding" width="420"></p>
 
@@ -61,6 +67,7 @@ mise run demo                    # webcam; models download on first run
 
 ```sh
 uv run obt-demo --image photo.jpg               # writes photo.pose.jpg
+uv run obt-demo --hands                         # also the hands (beta)
 uv run obt-demo --model-version v0.4.0-small-int8   # faster on a CPU
 uv run obt-demo --model-version v0.4.0          # the larger, more accurate model
 uv sync --extra gpu && uv run obt-demo --gpu    # CUDA
@@ -83,11 +90,21 @@ pose["score"]  # (23,)   confidence
 pose["xyz"]    # (23, 3) metres, hip-centred, camera axes (x right, y down, z forward)
 ```
 
-v0.4.0 models predict 3D as seen looking straight through the person crop and turn it into camera axes with the
+Hands (v0.5.0, beta): pass the hand model, and `pose["hands"]` holds `"right"` and `"left"`, each `None` (wrist not
+in view) or a dict with `xy` (21, 2) image pixels, `score` (21,) and `xyz` (21, 3) metres in the same frame as
+`pose["xyz"]`, placed at the body's wrist ([hands.py](src/open_body_tracker/hands.py)).
+
+```python
+from open_body_tracker.hub import hand_model_file
+pipeline = PosePipeline(fetch(model_file()), PersonDetector(fetch("yolox_nano.onnx")), hand_model=fetch(hand_model_file()))
+```
+
+v0.4.0 and later models predict 3D as seen looking straight through the person crop and turn it into camera axes with the
 camera's focal length. Pass it when you know it, `PosePipeline(..., focal=focal_px)` (`obt-demo --focal`); otherwise
 a 65° horizontal field of view is assumed ([geometry.py](src/open_body_tracker/geometry.py)).
 
-Keypoints: COCO 17 + big toe, small toe and heel on each foot ([keypoints.py](src/open_body_tracker/keypoints.py)).
+Keypoints: COCO 17 + big toe, small toe and heel on each foot ([keypoints.py](src/open_body_tracker/keypoints.py));
+hands: 4 points per finger and the wrist ([hands.py](src/open_body_tracker/hands.py)).
 
 The model always predicts the hips, also when they are out of view (shoulders-up framing, a desk in front), and
 the guessed hips make the whole 3D pose shake. `PosePipeline(..., anchor=True)` (`obt-demo --anchor`) moves the 3D

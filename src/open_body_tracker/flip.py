@@ -54,12 +54,14 @@ def averages_outputs(session):
     return session.get_modelmeta().custom_metadata_map.get("obt.flip") == "outputs"
 
 
-def run(session, crops):
-    """crops (N, 3, 256, 192) float32 RGB 0-255 -> flip-tested (xy, score, xyz)."""
+def run(session, crops, extra=()):
+    """crops (N, 3, 256, 192) float32 RGB 0-255 -> flip-tested (xy, score, xyz), followed by the `extra` outputs of
+    the plain crops (not flip-tested; e.g. the hand models' hand_xy)."""
     n = len(crops)
     both = {"crop": np.concatenate([crops, mirror(crops)])}
     if averages_outputs(session):
-        outputs = session.run(["xy", "score", "xyz"], both)
-        return average_outputs([o[:n] for o in outputs], [o[n:] for o in outputs])
-    outputs = session.run(LOGITS, both)
-    return decode(average([o[:n] for o in outputs], [o[n:] for o in outputs]))
+        outputs = session.run(["xy", "score", "xyz", *extra], both)
+        return (*average_outputs([o[:n] for o in outputs[:3]], [o[n:] for o in outputs[:3]]), *(o[:n] for o in outputs[3:]))
+    outputs = session.run([*LOGITS, *extra], both)
+    plain = [o[:n] for o in outputs]
+    return (*decode(average(plain[:5], [o[n:] for o in outputs[:5]])), *plain[5:])

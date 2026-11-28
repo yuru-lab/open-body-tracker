@@ -31,11 +31,12 @@ def rotation_to_z(ray):
     return np.eye(3) + vx + vx @ vx * ((1 - c) / s ** 2)
 
 
-def ray_to_camera(xyz, inverse, width, height, focal=None, principal=None):
+def ray_to_camera(xyz, inverse, width, height, focal=None, principal=None, centre=CROP_CENTRE):
     """(..., 3) ray-frame points of one crop -> camera axes. inverse: the crop -> image 2x3 affine
-    (open_body_tracker.preprocess.crop); focal in pixels (None: DEFAULT_FOV); principal point (None: image centre)."""
+    (open_body_tracker.preprocess.crop); focal in pixels (None: DEFAULT_FOV); principal point (None: image centre);
+    centre: the crop centre in crop pixels (person crop by default; hand crops: open_body_tracker.hands.CENTRE)."""
     focal = focal or default_focal(width)
     cx, cy = principal or (width / 2, height / 2)
-    u, v = np.asarray(CROP_CENTRE) @ np.asarray(inverse)[:, :2].T + np.asarray(inverse)[:, 2]
+    u, v = np.asarray(centre) @ np.asarray(inverse)[:, :2].T + np.asarray(inverse)[:, 2]
     rotation = rotation_to_z([(u - cx) / focal, (v - cy) / focal, 1.0])
     return (np.asarray(xyz) @ rotation).astype(np.float32)  # x_cam = R^T x_ray, row vectors

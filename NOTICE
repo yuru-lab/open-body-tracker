@@ -1,7 +1,7 @@
 open-body-tracker
 Copyright 2026 open-body-tracker contributors
 
-The source code and the model weights (obt-body-v*.* and the earlier names obt-body-v1.*, obt-body-v2.*, obt-h3c.*)
+The source code and the model weights (obt-body-v*.*, obt-hand-v*.* and the earlier names obt-body-v1.*, obt-body-v2.*, obt-h3c.*)
 are licensed under the Apache License 2.0 (LICENSE). See docs/LICENSING.md for every artefact and its licence.
 
 This product includes or adapts the following third-party work:
@@ -25,7 +25,7 @@ Acknowledgement:
 
 * SAM 3D Body (Meta Platforms, Inc.), https://github.com/facebookresearch/sam-3d-body
   We thank Meta for SAM 3D Body. The model was trained in part on keypoint labels predicted by SAM 3D Body
-  (SAM Materials were used in this research). No SAM 3D Body code or weights are included in this project.
+  (body keypoints and, from v0.5.0, hand keypoints from its hand decoder; SAM Materials were used in this research). No SAM 3D Body code or weights are included in this project.
   The SAM License (licenses/SAM-LICENSE.txt) governs SAM 3D Body itself; it is kept for reference and is not
   the licence of this project's files. See docs/LICENSING.md.
 
@@ -36,6 +36,12 @@ Data:
 * ASPset-510 (A. Nibali et al.), CC0 1.0, https://github.com/anibali/aspset-510
   The v0.2.0 and later weights were additionally trained on ASPset-510 3D joints and video frames.
 * Harmony4D (R. Khirodkar et al.), MIT License (dataset card), https://huggingface.co/datasets/Jyun-Ting/Harmony4D
-  The v0.4.0 weights were additionally trained on the multi-view 3D and video frames of its training split.
+  The v0.4.0 and later weights were additionally trained on the multi-view 3D and video frames of its training split.
+* Open Images V7 "Human hand" boxes (Google LLC), CC BY 4.0; only photos marked CC BY 2.0 are used (v0.5.0 hands).
+
+Tools used to prepare the training labels (not included):
+
+* MediaPipe Hand Landmarker (Google LLC), Apache License 2.0, https://github.com/google-ai-edge/mediapipe
+  Used only to check the v0.5.0 hand labels (hand present, same place, left or right); its outputs are not targets.
 
 Training images are NOT included. See DATA.md for the datasets, their licences and attribution.
