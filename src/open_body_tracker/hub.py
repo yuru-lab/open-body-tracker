@@ -10,7 +10,9 @@ YOLOX = "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc
 # Pose models. Every release names its models after its own tag (obt-body-<tag>[-small][-int8]), even when the weights
 # did not change; docs/MODELS.md lists which releases share weights.
 MODELS = {
-    "v0.4.0-small": "obt-body-v0.4.0-small",            # default: ViT-S
+    "v0.5.0-small": "obt-body-v0.5.0-small",            # default: ViT-S, with hand rows for the hand model
+    "v0.5.0-small-int8": "obt-body-v0.5.0-small-int8",
+    "v0.4.0-small": "obt-body-v0.4.0-small",            # ViT-S
     "v0.4.0-small-int8": "obt-body-v0.4.0-small-int8",  # the same weights quantized for CPUs (no fp16 file)
     "v0.4.0": "obt-body-v0.4.0",                        # ViT-B: more accurate, slower
     "v0.4.0-int8": "obt-body-v0.4.0-int8",
@@ -19,12 +21,23 @@ MODELS = {
     "v0.2.0": "obt-body-v0.2.0",            # same weights as v0.3.0
     "v0.1.0": "obt-body-v0.1.0",
 }
-DEFAULT_MODEL = "v0.4.0-small"
+DEFAULT_MODEL = "v0.5.0-small"
+# Hand models (21 points per hand), each used with the person model of the same key.
+HAND_MODELS = {
+    "v0.5.0-small": "obt-hand-v0.5.0-small",
+    "v0.5.0-small-int8": "obt-hand-v0.5.0-small-int8",
+}
 # Names used before this rule. obt-body-v1/v2.* and obt-h3c.* (v0.1.0's first name; no logit outputs, so no flip test)
 # stay on Hugging Face for old code.
 ALIASES = {"v2": "v0.2.0", "v1": "v0.1.0"}
 
 FILES = {
+    "obt-body-v0.5.0-small.onnx": (HF + "obt-body-v0.5.0-small.onnx", "fd1b21f4fcbfff29c42a63d09a7d32bce4de6578352389462a9ac2cda8f8213d"),
+    "obt-body-v0.5.0-small-fp16.onnx": (HF + "obt-body-v0.5.0-small-fp16.onnx", "9137b1335b9e792adf51dca1fcd9515fe365fd01741b7ac395d33f2f974e63ca"),
+    "obt-body-v0.5.0-small-int8.onnx": (HF + "obt-body-v0.5.0-small-int8.onnx", "cd74537e5f50880b2bc7b236dbfec1e6b36b26ab60bbbb5d92a40e5a88eb45cc"),
+    "obt-hand-v0.5.0-small.onnx": (HF + "obt-hand-v0.5.0-small.onnx", "a25abc8641b627f4cec3e4d633e650321a981e701523f79cc3e48bcee9dbe31b"),
+    "obt-hand-v0.5.0-small-fp16.onnx": (HF + "obt-hand-v0.5.0-small-fp16.onnx", "1eab21d8b6fe36c2c3e3be702ab51a29e19fa112368cc90dc199fe1220422a70"),
+    "obt-hand-v0.5.0-small-int8.onnx": (HF + "obt-hand-v0.5.0-small-int8.onnx", "74a7132a96695217e5afc855aa3ffd2334ac796b767e10efbdecb606447a50f2"),
     "obt-body-v0.4.0-small.onnx": (HF + "obt-body-v0.4.0-small.onnx", "e7e835be37247c10acce3b534628741b9510c2d2e66bc67431d07123b0c80f48"),
     "obt-body-v0.4.0-small-fp16.onnx": (HF + "obt-body-v0.4.0-small-fp16.onnx", "cf4f1d71fe12737ea4e8a5cc15abf9308823e2514360b52a02648751db7a63f8"),
     "obt-body-v0.4.0-small-int8.onnx": (HF + "obt-body-v0.4.0-small-int8.onnx", "3ac1bf56c490a08be7f1207a80c3cd5f22193cab3a319825f4fbb12439bce223"),
@@ -58,6 +71,16 @@ def model_file(version=DEFAULT_MODEL, fp16=False):
     if fp16 and version.endswith("-int8"):
         raise ValueError("the INT8 model has no fp16 file")
     return MODELS[version] + ("-fp16" if fp16 else "") + ".onnx"
+
+
+def hand_model_file(version=DEFAULT_MODEL, fp16=False):
+    """A key of HAND_MODELS -> the hand model's ONNX file name, e.g. obt-hand-v0.5.0-small.onnx."""
+    version = ALIASES.get(version, version)
+    if version not in HAND_MODELS:
+        raise ValueError(f"model version {version!r} has no hand model; choose from {', '.join(HAND_MODELS)}")
+    if fp16 and version.endswith("-int8"):
+        raise ValueError("the INT8 model has no fp16 file")
+    return HAND_MODELS[version] + ("-fp16" if fp16 else "") + ".onnx"
 
 
 def fetch(name, directory="models"):

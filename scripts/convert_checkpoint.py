@@ -21,8 +21,9 @@ def main():
         state = {k.removeprefix("module."): v for k, v in saved["state_dict" if args.raw else "ema_state_dict"].items() if k != "steps"}
     state = {k: v for k, v in state.items() if not k.endswith("num_batches_tracked")}
     flags = saved.get("args", {})  # v0.4.0 training runs record backbone, grid, rigid and ray
+    hands = any(k.startswith("hand2.") for k in state)  # v0.5.0: hand rows in the head + the hand pass
     config = ModelConfig(flags.get("backbone", "b"), tuple(flags.get("grid") or (18, 14)), bool(flags.get("rigid")),
-                         "ray" if flags.get("ray") else "camera") if "rigid" in flags else ModelConfig()
+                         "ray" if flags.get("ray") else "camera", hands) if "rigid" in flags else ModelConfig()
     model = BodyModel(config=config)
     missing, unexpected = model.load_state_dict(state, strict=False)
     assert not unexpected and all(k.endswith("num_batches_tracked") for k in missing), (missing, unexpected)
